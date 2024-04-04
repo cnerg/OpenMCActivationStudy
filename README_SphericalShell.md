@@ -3,7 +3,7 @@
 Describes the basic parameters of the spherical shell/point source problem.
 
 ## 1. Source Type
-* Point source of neutrons
+* Point source of neutrons at origin (0,0,0)
 * Monoenergetic (14 MeV) particles
 ## 2. Materials
 * Tungsten shell
