@@ -5,7 +5,7 @@ Describes the basic parameters of the spherical shell/point source problem.
 ## 1. Source Type
 * Point source of monoenergetic (14 MeV) neutrons at origin (0,0,0)
 ## 2. Materials
-* Tungsten shell
+* Tungsten shell - natural abundances, density = 19.6 g/cm3
 * Void everywhere else
 ## 3. Geometry
 * Thin spherical shell with r_in = 1000cm and r_out=1005cm, centered at origin (0,0,0)
