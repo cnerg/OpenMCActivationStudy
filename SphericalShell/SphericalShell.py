@@ -42,7 +42,7 @@ settings = openmc.Settings()
 settings.batches = 10
 settings.inactive = 1
 settings.particles = 100000
-settings.source = openmc.Source(space=PointSource, energy=Prob, strength = 10.0, particle = 'neutron')
+settings.source = openmc.Source(space=PointSource, energy=Prob, strength = 1.0, particle = 'neutron')
 settings.run_mode = 'fixed source'
 settings.export_to_xml()
 
