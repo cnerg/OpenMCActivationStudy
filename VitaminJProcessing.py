@@ -13,7 +13,7 @@ import openmc
 # restructure it into a form appropriate for ALARA.
 
 #Loading the csv that contains the energy bounds of the Vitamin J structure 
-Vit_J_Groups = pd.read_csv('VitaminJEnergyGroupStructure.csv', header=0)
+Vit_J_Groups = pd.read_csv('VitaminJEnergyGroupStructure.csv', header=1)
 ebounds_lh = Vit_J_Groups.iloc[:, 1]
 
 ebounds = sorted(ebounds_lh, reverse=True) #Energy bounds arranged from high energy to low energy
@@ -23,10 +23,10 @@ ebounds = sorted(ebounds_lh, reverse=True) #Energy bounds arranged from high ene
 Flux = 'Neutron_Flux.csv'
 Flux_Data = pd.read_csv(Flux, header=1)
 # Extract both columns from the CSV file
-y_lh = Flux_Data.iloc[:, 0]
-y = sorted(y_lh, reverse=True) #Energy bins arranged from highest to lowest energy
-z_lh = Flux_Data.iloc[:, 1]
-z = sorted(z_lh, reverse=True) #Fluxes arranged to highest to lowest corresponding energy
+energy_lh = Flux_Data.iloc[:, 0]
+energy = sorted(energy_lh, reverse=True) #Energy bins arranged from highest to lowest energy
+flux_lh = Flux_Data.iloc[:, 1]
+flux = sorted(flux_lh, reverse=True) #Fluxes arranged to highest to lowest corresponding energy
 #This section adds up the neutron fluxes between each pair of energy bounds in
 #the Vitamin J structure
 
@@ -46,15 +46,15 @@ for i in range(len(ebounds) - 1):
     # exactly equal to each other)
     
     if i == len(ebounds) - 2:  # Checking if it's the last interval
-        for j in range(len(y)):
-            if lower_bound >= y[j] >= upper_bound:  # Including the upper energy bound
-                flux_sums[i] += z[j]
+        for j in range(len(energy)):
+            if lower_bound >= energy[j] >= upper_bound:  # Including the upper energy bound
+                flux_sums[i] += flux[j]
                 
     # For all other energy intervals, the upper bound is not included in the summation            
     else:
-        for j in range(len(y)):
-            if lower_bound >= y[j] > upper_bound:
-                flux_sums[i] += z[j]
+        for j in range(len(energy)):
+            if lower_bound >= energy[j] > upper_bound:
+                flux_sums[i] += flux[j]
     
 #Converting list of fluxes to array format    
 flux_sums_array = np.array(flux_sums)
