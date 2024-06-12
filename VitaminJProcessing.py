@@ -7,15 +7,16 @@ Created on Tue Jun  4 02:05:08 2024
 import csv
 import numpy as np
 import pandas as pd
+import openmc
 
 #The purpose of this code is to take the flux vs. energy data derived from OpenMC and
 # restructure it into a form appropriate for ALARA.
 
 #Loading the csv that contains the energy bounds of the Vitamin J structure 
 Vit_J_Groups = pd.read_csv('VitaminJEnergyGroupStructure.csv', header=0)
-x_lh = Vit_J_Groups.iloc[:, 1]
+ebounds_lh = Vit_J_Groups.iloc[:, 1]
 
-x = sorted(x_lh, reverse=True) #Energy bounds arranged from high energy to low energy
+ebounds = sorted(ebounds_lh, reverse=True) #Energy bounds arranged from high energy to low energy
         
 #Loading the csv file that contains the energy bins and neutron flux values (from OpenMC)
 #This csv file was created in a Python code that reads the h5 output from OpenMC
@@ -30,21 +31,21 @@ z = sorted(z_lh, reverse=True) #Fluxes arranged to highest to lowest correspondi
 #the Vitamin J structure
 
 #Initializing the array of fluxes that are summed up
-flux_sums = [0] * (len(x) - 1)
+flux_sums = [0] * (len(ebounds) - 1)
 
 #Iterating over each interval of energies in the Vit J structure
 #Since there are 175 energy bins, there are 175 - 1 = 174 intervals
 
-for i in range(len(x) - 1):
-    lower_bound = x[i]
-    upper_bound = x[i + 1]
+for i in range(len(ebounds) - 1):
+    lower_bound = ebounds[i]
+    upper_bound = ebounds[i + 1]
     
     # If the OpenMC energy bin corresponding to the flux is equal to energy level of bin 175,
     # this 'if statement' will include the flux in the summation of the last interval
     # (This is done for completeness - it is unlikely that these two energy values will be
     # exactly equal to each other)
     
-    if i == len(x) - 2:  # Checking if it's the last interval
+    if i == len(ebounds) - 2:  # Checking if it's the last interval
         for j in range(len(y)):
             if lower_bound >= y[j] >= upper_bound:  # Including the upper energy bound
                 flux_sums[i] += z[j]
