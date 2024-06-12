@@ -12,8 +12,7 @@ import pandas as pd
 # restructure it into a form appropriate for ALARA.
 
 #Loading the csv that contains the energy bounds of the Vitamin J structure 
-Vit_J = 'VitaminJEnergyGroupStructure.csv'
-Vit_J_Groups = pd.read_csv(Vit_J, header=1)
+Vit_J_Groups = pd.read_csv('VitaminJEnergyGroupStructure.csv', header=1)
 x_lh = Vit_J_Groups.iloc[:, 1]
 
 x = sorted(x_lh, reverse=True) #Energy bounds arranged from high energy to low energy
