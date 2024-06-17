@@ -22,6 +22,8 @@ with openmc.StatePoint('statepoint.10.h5') as sp:
 # Save neutron flux vs energy as csv file:
 np.savetxt('Neutron_Flux.csv', np.c_[energies_fl, flux],delimiter=',')
 
+#The rest of this code does not require OpenMC
+
 #The purpose of this code is to take the flux vs. energy data derived from OpenMC and
 # restructure it into a form appropriate for ALARA.
 
@@ -53,8 +55,8 @@ results = zip(energy, flux)
 groups = len(ebounds) - 1
 bin = 0
 
-for energy, flux in results
-        while bin < groups and ebounds[bin + 1] >= energy
+for energy, flux in results:
+        while bin < groups and ebounds[bin + 1] >= energy:
                 bin += 1
         if bin < len(flux_sums):
                 flux_sums[bin] += flux
