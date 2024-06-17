@@ -61,4 +61,28 @@ for energy, flux in results:
         if bin < len(flux_sums):
                 flux_sums[bin] += flux
 
-print(flux_sums)
+#print(flux_sums)
+
+# Converting list of fluxes to array format    
+flux_sums_array = np.array(flux_sums)
+
+# Saving flux_sums as a 30x6 tab-delimited file:
+    
+Array_1 = flux_sums_array[:174] #The first 174 elements of the flux summation array
+print((Array_1))
+Array_2 = flux_sums_array[174] #The 175th element of the array
+print(Array_2)
+
+flux_sums_shaped = Array_1.reshape(29,6) #Accounts for the first 174 elements
+
+# Open the file in append mode and write each row of the reshaped array
+with open('Flux_Summation.txt', 'w') as f:
+    for row in flux_sums_shaped:
+        formatted_row = ' '.join([f'{value:.5e}' for value in row])
+        f.write(formatted_row + '\n')
+
+#Adding the 175th element to the array:
+with open('Flux_Summation.txt', 'a') as f:
+    f.write(f'{Array_2:.5e}\n')
+
+print(flux_sums_shaped)
