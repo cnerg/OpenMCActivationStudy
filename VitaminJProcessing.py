@@ -1,0 +1,88 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun  4 02:05:08 2024
+
+@author: Anupama Rajendra
+"""
+import csv
+import numpy as np
+import pandas as pd
+import openmc
+
+#Obtaining results from statepoint file:
+with openmc.StatePoint('statepoint.10.h5') as sp:
+    fl = sp.get_tally(name="Flux spectrum")
+    # Get the neutron energies from the energy filter
+    energy_filter_fl = fl.filters[0]
+    energies_fl = energy_filter_fl.bins[:, 0]
+
+    # Get the neutron flux values
+    flux = fl.get_values(value='mean').ravel()    
+
+# Save neutron flux vs energy as csv file:
+np.savetxt('Neutron_Flux.csv', np.c_[energies_fl, flux],delimiter=',')
+
+#The rest of this code does not require OpenMC
+
+#The purpose of this code is to take the flux vs. energy data derived from OpenMC and
+# restructure it into a form appropriate for ALARA.
+
+#Loading the csv that contains the energy bounds of the Vitamin J structure 
+Vit_J = pd.read_csv('VitaminJEnergyGroupStructure.csv')
+ebounds_lh = Vit_J.iloc[:, 1]
+
+ebounds = sorted(ebounds_lh, reverse=True) #Energy bounds arranged from high energy to low energy
+        
+#Loading the csv file that contains the energy bins and neutron flux values (from OpenMC)
+#This csv file was created in a Python code that reads the h5 output from OpenMC
+Flux_Data = pd.read_csv('Neutron_Flux.csv')
+# Extract both columns from the CSV file
+energy_lh = Flux_Data.iloc[:, 0]
+energy = sorted(energy_lh, reverse=True) #Energy bins arranged from highest to lowest energy
+flux_lh = Flux_Data.iloc[:, 1]
+flux = sorted(flux_lh, reverse=True) #Fluxes arranged to highest to lowest corresponding energy
+#This section adds up the neutron fluxes between each pair of energy bounds in
+#the Vitamin J structure
+
+#Initializing the array of fluxes that are summed up
+flux_sums = np.zeros(175)
+
+results = zip(energy, flux)
+
+#Iterating over each interval of energies in the Vit J structure
+#Since there are 175 energy bins, there are 175 - 1 = 174 intervals
+
+groups = len(ebounds) - 1
+bin = 0
+
+for energy, flux in results:
+        while bin < groups and ebounds[bin + 1] >= energy:
+                bin += 1
+        if bin < len(flux_sums):
+                flux_sums[bin] += flux
+
+#print(flux_sums)
+
+# Converting list of fluxes to array format    
+flux_sums_array = np.array(flux_sums)
+
+# Saving flux_sums as a 30x6 tab-delimited file:
+    
+Array_1 = flux_sums_array[:174] #The first 174 elements of the flux summation array
+print((Array_1))
+Array_2 = flux_sums_array[174] #The 175th element of the array
+print(Array_2)
+
+flux_sums_shaped = Array_1.reshape(29,6) #Accounts for the first 174 elements
+
+# Open the file in append mode and write each row of the reshaped array
+with open('Flux_Summation.txt', 'w') as f:
+    for row in flux_sums_shaped:
+        formatted_row = ' '.join([f'{value:.5e}' for value in row])
+        f.write(formatted_row + '\n')
+
+#Adding the 175th element to the array:
+with open('Flux_Summation.txt', 'a') as f:
+    f.write(f'{Array_2:.5e}\n')
+
+print(flux_sums_shaped)
