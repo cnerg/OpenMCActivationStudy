@@ -9,6 +9,19 @@ import numpy as np
 import pandas as pd
 import openmc
 
+#Obtaining results from statepoint file:
+with openmc.StatePoint('statepoint.10.h5') as sp:
+    fl = sp.get_tally(name="Flux spectrum")
+    # Get the neutron energies from the energy filter
+    energy_filter_fl = fl.filters[0]
+    energies_fl = energy_filter_fl.bins[:, 0]
+
+    # Get the neutron flux values
+    flux = fl.get_values(value='mean').ravel()    
+
+# Save neutron flux vs energy as csv file:
+np.savetxt('Neutron_Flux.csv', np.c_[energies_fl, flux],delimiter=',')
+
 #The purpose of this code is to take the flux vs. energy data derived from OpenMC and
 # restructure it into a form appropriate for ALARA.
 
