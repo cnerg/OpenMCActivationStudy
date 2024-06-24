@@ -7,7 +7,6 @@ Created on Thu Feb  8 08:16:12 2024
 import openmc
 import openmc.deplete
 import numpy as np
-from fractions import Fraction
 import matplotlib.pyplot as plt
 
 openmc.config['chain_file'] = 'chain_endfb71_sfr.xml'
