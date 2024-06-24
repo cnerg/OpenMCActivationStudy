@@ -83,7 +83,7 @@ tallies.export_to_xml()
 model = openmc.model.Model(geometry=geometry,settings=settings)
 #Depletion calculation
 W.depletable = True
-W.volume = 1.33333 * np.pi * (R_2**3 - R_1**3) #volume of W wall material
+W.volume = 4.0/3.0 * np.pi * (R_2**3 - R_1**3) #volume of W wall material
 chain = openmc.deplete.chain.Chain.from_xml("./chain_endfb71_sfr.xml")
 operator = openmc.deplete.CoupledOperator(model,"./chain_endfb71_sfr.xml", normalization_mode='source-rate')
 time_steps = [100, 36000, 86400]
