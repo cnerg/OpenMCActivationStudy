@@ -9,6 +9,11 @@ import openmc.deplete
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Importing Vitamin-J energy group structure:
+# The text file contains the energy bounds of the Vitamin J structure
+with open('VitJ.txt', 'r') as ebounds:
+   VitJ  = ebounds.readlines()
+
 openmc.config['chain_file'] = 'chain_endfb71_sfr.xml'
 
 # Create materials & export to XML:
@@ -59,16 +64,8 @@ cell_filter = openmc.CellFilter([Shell])
 neutron_tally.filters = [cell_filter]
 
 # Creating a tally to get the flux energy spectrum.
-# An energy filter is created to assign to the flux tally.
-e_min_1, e_max_1 = 5e2, 14.001e6
-groups = 500
-energies = np.logspace(np.log10(e_min_1), np.log10(e_max_1), groups + 1)
-energy_filter_flux = openmc.EnergyFilter(energies)
-
-e_min_2, e_max_2 = 5e2, 14.001e6
-groups = 500
-energies_2 = np.logspace(np.log10(e_min_2), np.log10(e_max_2), groups + 1)
-energy_filter_ng = openmc.EnergyFilter(energies_2)
+# An energy filter is created to assign to the flux tally using the Vitamin J structure.
+energy_filter_flux = openmc.EnergyFilter(VitJ)
 
 spectrum_tally = openmc.Tally(name="Flux spectrum")
 # Implementing energy and cell filters for flux spectrum tally
