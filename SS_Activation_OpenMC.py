@@ -88,7 +88,7 @@ integrator.integrate()
 
 # Depletion results file
 results = openmc.deplete.Results(filename='depletion_results.h5')
-# Obtain U235 concentration as a function of time
+# Obtain nuclide concentration as a function of time
 
 time, n_He4 = results.get_atoms('1', 'He4', nuc_units = 'atom/cm3')
 time, n_W179 = results.get_atoms('1', 'W179', nuc_units = 'atom/cm3')
@@ -104,19 +104,6 @@ time, n_Re185 = results.get_atoms('1', 'Re185', nuc_units = 'atom/cm3')
 time, n_Re187 = results.get_atoms('1', 'Re187', nuc_units = 'atom/cm3')
 time, n_Os187 = results.get_atoms('1', 'Os187', nuc_units = 'atom/cm3')
 
-# time, n_He4 = results.get_atoms('1', 'He4')
-# time, n_W180 = results.get_atoms('1', 'W180')
-# time, n_W181 = results.get_atoms('1', 'W181')
-# time, n_W182 = results.get_atoms('1', 'W182')
-# time, n_W183 = results.get_atoms('1', 'W183')
-# time, n_W184 = results.get_atoms('1', 'W184')
-# time, n_W185 = results.get_atoms('1', 'W185')
-# time, n_W186 = results.get_atoms('1', 'W186')
-# time, n_W187 = results.get_atoms('1', 'W187')
-# time, n_Re185 = results.get_atoms('1', 'Re185')
-# time, n_Re187 = results.get_atoms('1', 'Re187')
-# time, n_Os187 = results.get_atoms('1', 'Os187')
-
 print(time, n_He4)
 print(time, n_W179)
 print(time, n_W180)
@@ -131,16 +118,16 @@ print(time, n_Re185)
 print(time, n_Re187)
 print(time, n_Os187)
 
-# Plotting the arrays with customizations
+# Plotting the number densities of each nuclide:
 plt.plot(time, n_He4, marker='.', linestyle='solid', color='red', label='He4')
 plt.plot(time, n_W179, marker='.', linestyle='solid', color='blue', label="W179")
-plt.plot(time, n_W180, marker='.', linestyle='solid', color='green', label="W180")
-plt.plot(time, n_W181, marker='.', linestyle='solid', color='deepskyblue', label="W181")
-plt.plot(time, n_W182, marker='.', linestyle='solid', color='peru', label="W182")
-plt.plot(time, n_W183, marker='.', linestyle='solid', color='plum', label="W183")
-plt.plot(time, n_W184, marker='.', linestyle='solid', color='crimson', label="W184")
+#plt.plot(time, n_W180, marker='.', linestyle='solid', color='green', label="W180")
+#plt.plot(time, n_W181, marker='.', linestyle='solid', color='deepskyblue', label="W181")
+#plt.plot(time, n_W182, marker='.', linestyle='solid', color='peru', label="W182")
+#plt.plot(time, n_W183, marker='.', linestyle='solid', color='plum', label="W183")
+#plt.plot(time, n_W184, marker='.', linestyle='solid', color='crimson', label="W184")
 plt.plot(time, n_W185, marker='.', linestyle='solid', color='rosybrown', label="W185")
-plt.plot(time, n_W186, marker='.', linestyle='solid', color='gray', label="W186")
+#plt.plot(time, n_W186, marker='.', linestyle='solid', color='gray', label="W186")
 plt.plot(time, n_W187, marker='.', linestyle='solid', color='lime', label="W187")
 plt.plot(time, n_Re185, marker='.', linestyle='solid', color='gold', label="Re185")
 plt.plot(time, n_Re187, marker='.', linestyle='solid', color='tomato', label="Re187")
@@ -148,7 +135,9 @@ plt.plot(time, n_Os187, marker='.', linestyle='solid', color='cyan', label="Os18
 
 # Adding labels and title
 plt.xlabel('Time after shutdown [s]')
+plt.xlim(2.9e8, 3.0e8)
 plt.ylabel('Nuclide density [atoms/cm^3]')
+plt.yscale("log") #Generating semilog plot of number density vs. time after shutdown
 plt.title('Plot of number density vs time after shutdown')
 
 # Adding a legend
