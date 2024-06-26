@@ -83,9 +83,8 @@ model = openmc.model.Model(geometry=geometry,settings=settings)
 #Depletion calculation
 W.depletable = True
 W.volume = 4.0/3.0 * np.pi * (R_2**3 - R_1**3) #volume of W wall material
-chain = openmc.deplete.chain.Chain.from_xml("./chain_endfb71_sfr.xml")
-operator = openmc.deplete.CoupledOperator(model,"./chain_endfb71_sfr.xml", normalization_mode='source-rate')
-time_steps = [100, 36000, 86400]
+operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
+time_steps = [3e8, 86400, 2.6e6]
 source_rates = [1E+18, 0, 0]
 integrator = openmc.deplete.PredictorIntegrator(operator=operator, timesteps=time_steps, source_rates=source_rates, timestep_units='s')
 integrator.integrate()
