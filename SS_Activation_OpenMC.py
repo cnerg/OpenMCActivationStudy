@@ -10,9 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Importing Vitamin-J energy group structure:
-# The text file contains the energy bounds of the Vitamin J structure
-with open('VitJ.txt', 'r') as ebounds:
-   VitJ  = ebounds.readlines()
+# This excel file contains the energy bounds of the Vitamin J structure
+Vit_J = pd.read_excel('VitaminJEnergyGroupStructure.xlsx')
+ebounds = Vit_J.iloc[:, 1]
 
 openmc.config['chain_file'] = 'chain_endfb71_sfr.xml'
 
@@ -65,7 +65,7 @@ neutron_tally.filters = [cell_filter]
 
 # Creating a tally to get the flux energy spectrum.
 # An energy filter is created to assign to the flux tally using the Vitamin J structure.
-energy_filter_flux = openmc.EnergyFilter(VitJ)
+energy_filter_flux = openmc.EnergyFilter(ebounds)
 
 spectrum_tally = openmc.Tally(name="Flux spectrum")
 # Implementing energy and cell filters for flux spectrum tally
@@ -85,6 +85,29 @@ time_steps = [3e8, 86400, 2.6e6]
 source_rates = [1E+18, 0, 0]
 integrator = openmc.deplete.PredictorIntegrator(operator=operator, timesteps=time_steps, source_rates=source_rates, timestep_units='s')
 integrator.integrate()
+
+#Opening statepoint file to read tallies:
+with openmc.StatePoint('statepoint.10.h5') as sp:
+    fl = sp.get_tally(name="Flux spectrum")
+    nt = sp.get_tally(name="Neutron tally")
+    # Get the neutron energies from the energy filter
+    energy_filter_fl = fl.filters[0]
+    energies_fl = energy_filter_fl.bins[:, 0]
+
+    # Get the neutron flux values
+    flux = fl.get_values(value='mean').ravel()
+    
+    #Neutron flux/elastic/absorption tallies:
+    tal = nt.get_values(value='mean').ravel()
+
+Flux_Data = np.c_[energies_fl, flux]
+#Creating an excel file that stores flux data for each energy bin (used as input for ALARA)
+FD_Excel = pd.DataFrame(Flux_Data, columns=['Energy [eV]', 'Flux [n-cm/sp]'])
+FD_Excel.to_excel('Neutron_Flux.xlsx', index=False)
+
+Tallies_Excel = pd.DataFrame(tal)
+#Creating an excel file that stores total tally value data
+Tallies_Excel.to_excel('Tally_Values.xlsx', index=False)
 
 # Depletion results file
 results = openmc.deplete.Results(filename='depletion_results.h5')
