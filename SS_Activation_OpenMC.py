@@ -8,6 +8,7 @@ import openmc
 import openmc.deplete
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Importing Vitamin-J energy group structure:
 # This excel file contains the energy bounds of the Vitamin J structure
