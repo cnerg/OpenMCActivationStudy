@@ -117,7 +117,6 @@ results = openmc.deplete.Results(filename='depletion_results.h5')
 
 time, n_He4 = results.get_atoms('1', 'He4', nuc_units = 'atom/cm3')
 time, n_W179 = results.get_atoms('1', 'W179', nuc_units = 'atom/cm3')
-time, n_W180 = results.get_atoms('1', 'W180', nuc_units = 'atom/cm3')
 time, n_W181 = results.get_atoms('1', 'W181', nuc_units = 'atom/cm3')
 time, n_W185 = results.get_atoms('1', 'W185', nuc_units = 'atom/cm3')
 time, n_W187 = results.get_atoms('1', 'W187', nuc_units = 'atom/cm3')
@@ -143,9 +142,11 @@ plt.plot(time, n_Os187, marker='.', linestyle='solid', color='cyan', label="Os18
 
 # Adding labels and title
 plt.xlabel('Time after shutdown [s]')
-plt.xlim(2.9e8, 3.0e8)
+plt.xlim(time_steps[1], time_steps[-1])
+#plt.gca().set_ylim(bottom=0)
 plt.ylabel('Nuclide density [atoms/cm^3]')
-plt.yscale("log") #Generating semilog plot of number density vs. time after shutdown
+plt.xscale("log")
+plt.yscale("log")
 plt.title('Plot of number density vs time after shutdown')
 
 # Adding a legend
@@ -154,5 +155,3 @@ plt.legend()
 plt.savefig('Nuclide_density_OpenMC')
 # Display the plot
 plt.show()
-
-#DH = results.get_decay_heat('1', units='W/cm3', by_nuclide=False)
