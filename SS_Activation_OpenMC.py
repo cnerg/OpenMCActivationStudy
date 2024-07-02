@@ -91,15 +91,16 @@ integrator.integrate()
 with openmc.StatePoint('statepoint.10.h5') as sp:
     fl = sp.get_tally(name="Flux spectrum")
     nt = sp.get_tally(name="Neutron tally")
-    # Get the neutron energies from the energy filter
-    energy_filter_fl = fl.filters[0]
-    energies_fl = energy_filter_fl.bins[:, 0]
-
-    # Get the neutron flux values
-    flux = fl.get_values(value='mean').ravel()
     
-    #Neutron flux/elastic/absorption tallies:
-    tal = nt.get_values(value='mean').ravel()
+# Get the neutron energies from the energy filter
+energy_filter_fl = fl.filters[0]
+energies_fl = energy_filter_fl.bins[:, 0]
+
+# Get the neutron flux values
+flux = fl.get_values(value='mean').ravel()
+
+#Neutron flux/elastic/absorption tallies:
+tal = nt.get_values(value='mean').ravel()
 
 Flux_Data = np.c_[energies_fl, flux]
 #Creating an excel file that stores flux data for each energy bin (used as input for ALARA)
