@@ -12,8 +12,8 @@ import pandas as pd
 
 # Importing Vitamin-J energy group structure:
 # This excel file contains the energy bounds of the Vitamin J structure
-Vit_J = pd.read_excel('VitaminJEnergyGroupStructure.xlsx')
-ebounds = Vit_J.iloc[:, 1]
+# Vit_J = pd.read_excel('VitaminJEnergyGroupStructure.xlsx')
+# ebounds = Vit_J.iloc[:, 1]
 
 openmc.config['chain_file'] = 'chain_endfb71_sfr.xml'
 
@@ -66,7 +66,7 @@ neutron_tally.filters = [cell_filter]
 
 # Creating a tally to get the flux energy spectrum.
 # An energy filter is created to assign to the flux tally using the Vitamin J structure.
-energy_filter_flux = openmc.EnergyFilter(ebounds)
+energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-175")
 
 spectrum_tally = openmc.Tally(name="Flux spectrum")
 # Implementing energy and cell filters for flux spectrum tally
