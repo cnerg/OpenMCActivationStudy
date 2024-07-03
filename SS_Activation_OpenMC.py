@@ -123,22 +123,15 @@ time, n_W187 = results.get_atoms('1', 'W187', nuc_units = 'atom/cm3')
 time, n_Re187 = results.get_atoms('1', 'Re187', nuc_units = 'atom/cm3')
 time, n_Os187 = results.get_atoms('1', 'Os187', nuc_units = 'atom/cm3')
 
-print(time, n_He4)
-print(time, n_W179)
-print(time, n_W181)
-print(time, n_W185)
-print(time, n_W187)
-print(time, n_Re187)
-print(time, n_Os187)
+print(tal)
 
 # Plotting the number densities of each nuclide:
-plt.plot(time, n_He4, marker='.', linestyle='solid', color='red', label='He4')
-plt.plot(time, n_W179, marker='.', linestyle='solid', color='blue', label="W179")
-plt.plot(time, n_W181, marker='.', linestyle='solid', color='deepskyblue', label="W181")
-plt.plot(time, n_W185, marker='.', linestyle='solid', color='rosybrown', label="W185")
-plt.plot(time, n_W187, marker='.', linestyle='solid', color='lime', label="W187")
-plt.plot(time, n_Re187, marker='.', linestyle='solid', color='tomato', label="Re187")
-plt.plot(time, n_Os187, marker='.', linestyle='solid', color='cyan', label="Os187")
+num_dens= {}
+plot_colors = {'He4':'red', 'W179': 'blue', 'W181':'deepskyblue', 'W185':'rosybrown', 'W187':'lime', 'Re187':'tomato', 'Os187':'cyan'}
+for nuclide, plot_color in plot_colors.items():
+    time, num_dens[nuclide] =results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
+    print(time, num_dens[nuclide])
+    plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
 # Adding labels and title
 plt.xlabel('Time after shutdown [s]')
