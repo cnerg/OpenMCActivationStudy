@@ -8,7 +8,9 @@ import openmc
 import openmc.deplete
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import pandas as pd
+import random
 
 # Importing Vitamin-J energy group structure:
 # This excel file contains the energy bounds of the Vitamin J structure
@@ -101,6 +103,7 @@ flux = fl.get_values(value='mean').ravel()
 
 #Neutron flux/elastic/absorption tallies:
 tal = nt.get_values(value='mean').ravel()
+print(tal)
 
 Flux_Data = np.c_[energies_fl, flux]
 #Creating an excel file that stores flux data for each energy bin (used as input for ALARA)
@@ -113,23 +116,35 @@ Tallies_Excel.to_excel('Tally_Values.xlsx', index=False)
 
 # Depletion results file
 results = openmc.deplete.Results(filename='depletion_results.h5')
-# Obtain nuclide concentration as a function of time
 
-time, n_He4 = results.get_atoms('1', 'He4', nuc_units = 'atom/cm3')
-time, n_W179 = results.get_atoms('1', 'W179', nuc_units = 'atom/cm3')
-time, n_W181 = results.get_atoms('1', 'W181', nuc_units = 'atom/cm3')
-time, n_W185 = results.get_atoms('1', 'W185', nuc_units = 'atom/cm3')
-time, n_W187 = results.get_atoms('1', 'W187', nuc_units = 'atom/cm3')
-time, n_Re187 = results.get_atoms('1', 'Re187', nuc_units = 'atom/cm3')
-time, n_Os187 = results.get_atoms('1', 'Os187', nuc_units = 'atom/cm3')
+# Stable W nuclides present at beginning of operation (will not be plotted)
+stable_nuc = ['W180', 'W182', 'W183', 'W184', 'W186']  
 
-print(tal)
+#Store list of nuclides from last timestep as a Materials object
+materials_last = results.export_to_materials(-1)
+# Storing depletion data from 1st material
+mat_dep = materials_last[0]
+# Obtaining the list of nuclides from the results file
+nuc_last = mat_dep.get_nuclides()
 
-# Plotting the number densities of each nuclide:
+# Removing stable W nuclides from list so that they do not appear in the plot
+for j in stable_nuc :
+    nuc_last.remove(j)
+print(nuc_last)
+
+colors = list(mcolors.CSS4_COLORS.keys())
 num_dens= {}
-plot_colors = {'He4':'red', 'W179': 'blue', 'W181':'deepskyblue', 'W185':'rosybrown', 'W187':'lime', 'Re187':'tomato', 'Os187':'cyan'}
-for nuclide, plot_color in plot_colors.items():
-    time, num_dens[nuclide] =results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
+pair_list = {}
+
+k = 0
+for k in range(len(nuc_last)) :
+    Random_Color = random.choice(colors)
+    plot_colors = {nuc_last[k]: Random_Color}
+    pair_list.update(plot_colors)
+    k = k + 1
+
+for nuclide, plot_color in pair_list.items():
+    time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
     print(time, num_dens[nuclide])
     plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
