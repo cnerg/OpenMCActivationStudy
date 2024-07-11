@@ -8,11 +8,14 @@ import openmc
 import openmc.deplete
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import pandas as pd
+import random
 
 # Importing Vitamin-J energy group structure:
-# The text file contains the energy bounds of the Vitamin J structure
-with open('VitJ.txt', 'r') as ebounds:
-   VitJ  = ebounds.readlines()
+# This excel file contains the energy bounds of the Vitamin J structure
+# Vit_J = pd.read_excel('VitaminJEnergyGroupStructure.xlsx')
+# ebounds = Vit_J.iloc[:, 1]
 
 openmc.config['chain_file'] = 'chain_endfb71_sfr.xml'
 
@@ -65,7 +68,7 @@ neutron_tally.filters = [cell_filter]
 
 # Creating a tally to get the flux energy spectrum.
 # An energy filter is created to assign to the flux tally using the Vitamin J structure.
-energy_filter_flux = openmc.EnergyFilter(VitJ)
+energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-175")
 
 spectrum_tally = openmc.Tally(name="Flux spectrum")
 # Implementing energy and cell filters for flux spectrum tally
@@ -86,58 +89,72 @@ source_rates = [1E+18, 0, 0]
 integrator = openmc.deplete.PredictorIntegrator(operator=operator, timesteps=time_steps, source_rates=source_rates, timestep_units='s')
 integrator.integrate()
 
+#Opening statepoint file to read tallies:
+with openmc.StatePoint('statepoint.10.h5') as sp:
+    fl = sp.get_tally(name="Flux spectrum")
+    nt = sp.get_tally(name="Neutron tally")
+    
+# Get the neutron energies from the energy filter
+energy_filter_fl = fl.filters[0]
+energies_fl = energy_filter_fl.bins[:, 0]
+
+# Get the neutron flux values
+flux = fl.get_values(value='mean').ravel()
+
+#Neutron flux/elastic/absorption tallies:
+tal = nt.get_values(value='mean').ravel()
+print(tal)
+
+Flux_Data = np.c_[energies_fl, flux]
+#Creating an excel file that stores flux data for each energy bin (used as input for ALARA)
+FD_Excel = pd.DataFrame(Flux_Data, columns=['Energy [eV]', 'Flux [n-cm/sp]'])
+FD_Excel.to_excel('Neutron_Flux.xlsx', index=False)
+
+Tallies_Excel = pd.DataFrame(tal)
+#Creating an excel file that stores total tally value data
+Tallies_Excel.to_excel('Tally_Values.xlsx', index=False)
+
 # Depletion results file
 results = openmc.deplete.Results(filename='depletion_results.h5')
-# Obtain nuclide concentration as a function of time
 
-time, n_He4 = results.get_atoms('1', 'He4', nuc_units = 'atom/cm3')
-time, n_W179 = results.get_atoms('1', 'W179', nuc_units = 'atom/cm3')
-time, n_W180 = results.get_atoms('1', 'W180', nuc_units = 'atom/cm3')
-time, n_W181 = results.get_atoms('1', 'W181', nuc_units = 'atom/cm3')
-time, n_W182 = results.get_atoms('1', 'W182', nuc_units = 'atom/cm3')
-time, n_W183 = results.get_atoms('1', 'W183', nuc_units = 'atom/cm3')
-time, n_W184 = results.get_atoms('1', 'W184', nuc_units = 'atom/cm3')
-time, n_W185 = results.get_atoms('1', 'W185', nuc_units = 'atom/cm3')
-time, n_W186 = results.get_atoms('1', 'W186', nuc_units = 'atom/cm3')
-time, n_W187 = results.get_atoms('1', 'W187', nuc_units = 'atom/cm3')
-time, n_Re185 = results.get_atoms('1', 'Re185', nuc_units = 'atom/cm3')
-time, n_Re187 = results.get_atoms('1', 'Re187', nuc_units = 'atom/cm3')
-time, n_Os187 = results.get_atoms('1', 'Os187', nuc_units = 'atom/cm3')
+# Stable W nuclides present at beginning of operation (will not be plotted)
+stable_nuc = ['W180', 'W182', 'W183', 'W184', 'W186']  
 
-print(time, n_He4)
-print(time, n_W179)
-print(time, n_W180)
-print(time, n_W181)
-print(time, n_W182)
-print(time, n_W183)
-print(time, n_W184)
-print(time, n_W185)
-print(time, n_W186)
-print(time, n_W187)
-print(time, n_Re185)
-print(time, n_Re187)
-print(time, n_Os187)
+#Store list of nuclides from last timestep as a Materials object
+materials_last = results.export_to_materials(-1)
+# Storing depletion data from 1st material
+mat_dep = materials_last[0]
+# Obtaining the list of nuclides from the results file
+nuc_last = mat_dep.get_nuclides()
 
-# Plotting the number densities of each nuclide:
-plt.plot(time, n_He4, marker='.', linestyle='solid', color='red', label='He4')
-plt.plot(time, n_W179, marker='.', linestyle='solid', color='blue', label="W179")
-#plt.plot(time, n_W180, marker='.', linestyle='solid', color='green', label="W180")
-#plt.plot(time, n_W181, marker='.', linestyle='solid', color='deepskyblue', label="W181")
-#plt.plot(time, n_W182, marker='.', linestyle='solid', color='peru', label="W182")
-#plt.plot(time, n_W183, marker='.', linestyle='solid', color='plum', label="W183")
-#plt.plot(time, n_W184, marker='.', linestyle='solid', color='crimson', label="W184")
-plt.plot(time, n_W185, marker='.', linestyle='solid', color='rosybrown', label="W185")
-#plt.plot(time, n_W186, marker='.', linestyle='solid', color='gray', label="W186")
-plt.plot(time, n_W187, marker='.', linestyle='solid', color='lime', label="W187")
-plt.plot(time, n_Re185, marker='.', linestyle='solid', color='gold', label="Re185")
-plt.plot(time, n_Re187, marker='.', linestyle='solid', color='tomato', label="Re187")
-plt.plot(time, n_Os187, marker='.', linestyle='solid', color='cyan', label="Os187")
+# Removing stable W nuclides from list so that they do not appear in the plot
+for j in stable_nuc :
+    nuc_last.remove(j)
+print(nuc_last)
+
+colors = list(mcolors.CSS4_COLORS.keys())
+num_dens= {}
+pair_list = {}
+
+k = 0
+for k in range(len(nuc_last)) :
+    Random_Color = random.choice(colors)
+    plot_colors = {nuc_last[k]: Random_Color}
+    pair_list.update(plot_colors)
+    k = k + 1
+
+for nuclide, plot_color in pair_list.items():
+    time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
+    print(time, num_dens[nuclide])
+    plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
 # Adding labels and title
 plt.xlabel('Time after shutdown [s]')
-plt.xlim(2.9e8, 3.0e8)
+plt.xlim(time_steps[1], time_steps[-1])
+#plt.gca().set_ylim(bottom=0)
 plt.ylabel('Nuclide density [atoms/cm^3]')
-plt.yscale("log") #Generating semilog plot of number density vs. time after shutdown
+plt.xscale("log")
+plt.yscale("log")
 plt.title('Plot of number density vs time after shutdown')
 
 # Adding a legend
@@ -146,5 +163,3 @@ plt.legend()
 plt.savefig('Nuclide_density_OpenMC')
 # Display the plot
 plt.show()
-
-#DH = results.get_decay_heat('1', units='W/cm3', by_nuclide=False)
