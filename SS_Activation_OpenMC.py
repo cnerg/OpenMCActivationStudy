@@ -136,15 +136,9 @@ colors = list(mcolors.CSS4_COLORS.keys())
 num_dens= {}
 pair_list = {}
 
-k = 0
-for k in range(len(nuc_last)) :
-    Random_Color = random.choice(colors)
-    plot_colors = {nuc_last[k]: Random_Color}
-    pair_list.update(plot_colors)
-    k = k + 1
-
-for nuclide, plot_color in pair_list.items():
-    time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
+for nuclide in nuc_last:
+    plot_color = random.choice(colors)
+    time, num_dense[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
     print(time, num_dens[nuclide])
     plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
