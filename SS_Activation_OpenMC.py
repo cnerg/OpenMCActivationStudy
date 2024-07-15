@@ -138,7 +138,7 @@ pair_list = {}
 
 for nuclide in nuc_last:
     plot_color = random.choice(colors)
-    time, num_dense[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
+    time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
     print(time, num_dens[nuclide])
     plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
