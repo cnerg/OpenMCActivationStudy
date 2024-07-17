@@ -22,7 +22,7 @@ end
 # Normalizing neutron source rate by volume
 # This gives fluxes in #/cm^2-s when multiplied by the values in flux_ss
 
-flux flux_3   fluxdata/flux_ss	15836181434 	0	default
+flux flux_3   fluxdata/flux_ss	1E+18 	0	default
 
 
 Schedule myschedule
