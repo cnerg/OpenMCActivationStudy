@@ -110,13 +110,13 @@ Flux_Data = np.c_[energies_fl, flux]
 #Dividing by volume to obtain proper units of flux (#/cm^2-s)
 Flux_Data = np.c_[energies_fl, flux/W.volume]
 #ALARA flux inputs go from high energy to low energy
-Flux_Data_ALARA = Flux_Data.sort(reverse=True)
+Flux_Data_ALARA = Flux_Data[::-1]
 FD_Excel = pd.DataFrame(Flux_Data_ALARA, columns=['Energy [eV]', 'Flux [n-cm/sp]'])
-FD_Excel.to_excel('Neutron_Flux.xlsx', index=False)
+FD_Excel.to_csv('Neutron_Flux.csv', index=False)
 
 Tallies_Excel = pd.DataFrame(tal)
 #Creating an excel file that stores total tally value data
-Tallies_Excel.to_excel('Tally_Values.xlsx', index=False)
+Tallies_Excel.to_csv('Tally_Values.csv', index=False)
 
 # Depletion results file
 results = openmc.deplete.Results(filename='depletion_results.h5')
