@@ -107,7 +107,11 @@ print(tal)
 
 Flux_Data = np.c_[energies_fl, flux]
 #Creating an excel file that stores flux data for each energy bin (used as input for ALARA)
-FD_Excel = pd.DataFrame(Flux_Data, columns=['Energy [eV]', 'Flux [n-cm/sp]'])
+#Dividing by volume to obtain proper units of flux (#/cm^2-s)
+Flux_Data = np.c_[energies_fl, flux/W.volume]
+#ALARA flux inputs go from high energy to low energy
+Flux_Data_ALARA = Flux_Data.sort(reverse=True)
+FD_Excel = pd.DataFrame(Flux_Data_ALARA, columns=['Energy [eV]', 'Flux [n-cm/sp]'])
 FD_Excel.to_excel('Neutron_Flux.xlsx', index=False)
 
 Tallies_Excel = pd.DataFrame(tal)
