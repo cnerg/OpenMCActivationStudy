@@ -151,13 +151,13 @@ with open(r'Densities_CSV.csv', 'a') as density_file:
         plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
 # Adding labels and title
-plt.xlabel('Time after shutdown [s]')
-plt.xlim(time_steps[1], time_steps[-1])
+plt.xlabel('Time after beginning of operation [s]')
+plt.xlim(1, sum(time_steps)
 #plt.gca().set_ylim(bottom=0)
 plt.ylabel('Nuclide density [atoms/cm^3]')
 plt.xscale("log")
 plt.yscale("log")
-plt.title('Plot of number density vs time after shutdown')
+plt.title('Plot of number density vs time')
 
 # Adding a legend
 plt.legend()
