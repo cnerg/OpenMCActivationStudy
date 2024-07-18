@@ -140,11 +140,15 @@ colors = list(mcolors.CSS4_COLORS.keys())
 num_dens= {}
 pair_list = {}
 
-for nuclide in nuc_last:
-    plot_color = random.choice(colors)
-    time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
-    print(time, num_dens[nuclide])
-    plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
+with open(r'Densities_CSV.csv', 'a') as density_file:
+
+    for nuclide in nuc_last:
+        plot_color = random.choice(colors)
+        time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
+        print(time, num_dens[nuclide])
+        density_file.write('{}\t'.format(nuclide))
+        density_file.write('{}\n'.format(num_dens[nuclide]))
+        plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
 # Adding labels and title
 plt.xlabel('Time after shutdown [s]')
