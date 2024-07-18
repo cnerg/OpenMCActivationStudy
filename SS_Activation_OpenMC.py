@@ -146,7 +146,7 @@ with open(r'Densities_CSV.csv', 'a') as density_file:
         plot_color = random.choice(colors)
         time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
         print(time, num_dens[nuclide])
-        density_file.write(''.join(map(str, nuclide)) + ',')
+        density_file.write(f'{nuclide},')
         density_file.write(','.join(map(str, num_dens[nuclide])) + '\n')
         plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
