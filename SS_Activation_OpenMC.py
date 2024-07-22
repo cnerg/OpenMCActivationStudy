@@ -43,7 +43,8 @@ S_3 = outside_sphere_1 & inside_sphere_2 #filled with tungsten
 # Mapping materials to geometry:
 Void = openmc.Cell(fill=None, region = inside_sphere_1)
 Shell = openmc.Cell(fill=W, region=S_3)
-geometry = openmc.Geometry([Void, Shell])
+Cells = [Void, Shell]
+geometry = openmc.Geometry(Cells)
 geometry.export_to_xml()
 
 # Source distribution:
@@ -83,7 +84,9 @@ model = openmc.model.Model(geometry=geometry,settings=settings)
 #Depletion calculation
 W.depletable = True
 W.volume = 4.0/3.0 * np.pi * (R_2**3 - R_1**3) #volume of W wall material
-operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
+fluxes, micros = openmc.deplete.get_microxs_and_flux(model, Cells)
+operator = openmc.deplete.IndependentOperator(materials, fluxes[0:1], micros[0:1],normalization_mode='source-rate')
+# operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
 time_steps = [3e8, 86400, 2.6e6]
 source_rates = [1E+18, 0, 0]
 integrator = openmc.deplete.PredictorIntegrator(operator=operator, timesteps=time_steps, source_rates=source_rates, timestep_units='s')
