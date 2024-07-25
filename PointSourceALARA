@@ -19,21 +19,25 @@ mixture W_wall
 	element  w   1.0   1.0
 end
 
+# Normalizing neutron source rate by volume
+# This gives fluxes in #/cm^2-s when multiplied by the values in flux_ss
 
 flux flux_3   fluxdata/flux_ss	1E+18 	0	default
 
 
 Schedule myschedule
-	100 s	  flux_3   single_pulse     0  s
+	3e+8 s	  flux_3   single_pulse     0  s
 end
 
 pulsehistory single_pulse
 	1	0 s
 end
 
+# 24h and 30d of cooling after shutdown
+
 cooling
-	10 h
 	24 h
+	2.6864e+6 s
 end
 
 dump_file dump_files/ss.dump
