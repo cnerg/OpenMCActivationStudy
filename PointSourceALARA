@@ -47,4 +47,4 @@ output zone
    number_density
 end
 
-truncation 1e-6
+truncation 5e-15
