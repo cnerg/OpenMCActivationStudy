@@ -85,8 +85,8 @@ model = openmc.model.Model(geometry=geometry,settings=settings)
 W.depletable = True
 W.volume = 4.0/3.0 * np.pi * (R_2**3 - R_1**3) #volume of W wall material
 fluxes, micros = openmc.deplete.get_microxs_and_flux(model, Cells)
-operator = openmc.deplete.IndependentOperator(materials, fluxes[0:1], micros[0:1],normalization_mode='source-rate')
-# operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
+#operator = openmc.deplete.IndependentOperator(materials, fluxes[0:1], micros[0:1],normalization_mode='source-rate')
+operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
 time_steps = [3e8, 86400, 2.6e6]
 source_rates = [1E+18, 0, 0]
 integrator = openmc.deplete.PredictorIntegrator(operator=operator, timesteps=time_steps, source_rates=source_rates, timestep_units='s')
@@ -154,13 +154,14 @@ with open(r'Densities_CSV.csv', 'a') as density_file:
         plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
 # Adding labels and title
-plt.xlabel('Time after beginning of operation [s]')
-plt.xlim(1, sum(time_steps)
+plt.xlabel('Time after start of operation [s]')
+plt.xlim(1, sum(time_steps))
+#plt.ylim(1e-09, 1e+20)
 #plt.gca().set_ylim(bottom=0)
 plt.ylabel('Nuclide density [atoms/cm^3]')
 plt.xscale("log")
 plt.yscale("log")
-plt.title('Plot of number density vs time')
+plt.title('Plot of number density vs time after operation')
 
 # Adding a legend
 plt.legend()
@@ -168,3 +169,4 @@ plt.legend()
 plt.savefig('Nuclide_density_OpenMC')
 # Display the plot
 plt.show()
+plt.close()
