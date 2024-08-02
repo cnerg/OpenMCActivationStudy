@@ -84,9 +84,9 @@ model = openmc.model.Model(geometry=geometry,settings=settings)
 #Depletion calculation
 W.depletable = True
 W.volume = 4.0/3.0 * np.pi * (R_2**3 - R_1**3) #volume of W wall material
-fluxes, micros = openmc.deplete.get_microxs_and_flux(model, Cells)
-operator = openmc.deplete.IndependentOperator(materials, fluxes[0:1], micros[0:1],normalization_mode='source-rate')
-# operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
+#fluxes, micros = openmc.deplete.get_microxs_and_flux(model, Cells)
+#operator = openmc.deplete.IndependentOperator(materials, fluxes[0:1], micros[0:1],normalization_mode='source-rate')
+operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
 time_steps = [3e8, 86400, 2.6e6]
 source_rates = [1E+18, 0, 0]
 integrator = openmc.deplete.PredictorIntegrator(operator=operator, timesteps=time_steps, source_rates=source_rates, timestep_units='s')
@@ -127,25 +127,29 @@ results = openmc.deplete.Results(filename='depletion_results.h5')
 # Stable W nuclides present at beginning of operation (will not be plotted)
 stable_nuc = ['W180', 'W182', 'W183', 'W184', 'W186']  
 
-#Store list of nuclides from last timestep as a Materials object
-materials_last = results.export_to_materials(-1)
-# Storing depletion data from 1st material
-mat_dep = materials_last[0]
-# Obtaining the list of nuclides from the results file
-nuc_last = mat_dep.get_nuclides()
+materials_list=[]
+#Store list of nuclides from each timestep as a Materials object
+for step in range(len(time_steps)):
+    materials_object = results.export_to_materials(step)
+    # Storing depletion data from 1st material
+    mat_dep = materials_object[0]
+    # Obtaining the list of nuclides in the results file
+    rad_nuc = mat_dep.get_nuclides()
+    materials_list.append(rad_nuc)
+
 
 # Removing stable W nuclides from list so that they do not appear in the plot
 for j in stable_nuc :
-    nuc_last.remove(j)
-print(nuc_last)
+    rad_nuc.remove(j)
+print(rad_nuc)
 
 colors = list(mcolors.CSS4_COLORS.keys())
 num_dens= {}
 pair_list = {}
 
-with open(r'Densities_CSV.csv', 'a') as density_file:
+with open(r'Densities_CSV.csv', 'w') as density_file:
 
-    for nuclide in nuc_last:
+    for nuclide in rad_nuc:
         plot_color = random.choice(colors)
         time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
         print(time, num_dens[nuclide])
@@ -154,13 +158,14 @@ with open(r'Densities_CSV.csv', 'a') as density_file:
         plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
 # Adding labels and title
-plt.xlabel('Time after beginning of operation [s]')
-plt.xlim(1, sum(time_steps)
+plt.xlabel('Time after start of operation [s]')
+plt.xlim(1, sum(time_steps))
+#plt.ylim(1e-09, 1e+20)
 #plt.gca().set_ylim(bottom=0)
 plt.ylabel('Nuclide density [atoms/cm^3]')
 plt.xscale("log")
 plt.yscale("log")
-plt.title('Plot of number density vs time')
+plt.title('Plot of number density vs time after operation')
 
 # Adding a legend
 plt.legend()
@@ -168,3 +173,4 @@ plt.legend()
 plt.savefig('Nuclide_density_OpenMC')
 # Display the plot
 plt.show()
+plt.close()
