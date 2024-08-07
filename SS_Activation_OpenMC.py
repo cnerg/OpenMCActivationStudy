@@ -14,10 +14,6 @@ import random
 
 openmc.config['chain_file'] = 'chain_endfb71_sfr.xml'
 
-#Importing Vitamin-J energy group structure:
-Vit_J = pd.read_excel('VitaminJEnergyGroupStructure.xlsx')
-ebounds = Vit_J.iloc[:, 1]
-
 # Create materials & export to XML:
 #Simulating tungsten shell:
 W = openmc.Material(material_id=1, name='W_Shell')
