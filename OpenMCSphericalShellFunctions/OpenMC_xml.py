@@ -8,16 +8,18 @@ Created on Wed Aug  7 10:07:33 2024
 import openmc
 import argparse
 
-parser = argparse.ArgumentParser(description="Specify required inputs: file path to ALARA Element Library, element name, inner radius [cm], outer_radius [cm], particle energy [eV]")
+def define_parser():
+    parser = argparse.ArgumentParser(description="Specify required inputs: file path to ALARA Element Library, element name, inner radius [cm], outer_radius [cm], particle energy [eV]")
 
-#Required user inputs:
-parser.add_argument('--filepath', type=str, required=True)    
-parser.add_argument('--element', type=str, required=True)
-parser.add_argument('--inner_radius', type=float, required=True)
-parser.add_argument('--outer_radius', type=float, required=True)
-parser.add_argument('--energy', type=float, required=True)
+    #Required user inputs:
+    parser.add_argument('--filepath', type=str, required=True)    
+    parser.add_argument('--element', type=str, required=True)
+    parser.add_argument('--inner_radius', type=float, required=True)
+    parser.add_argument('--outer_radius', type=float, required=True)
+    parser.add_argument('--energy', type=float, required=True)
 
-args = parser.parse_args()
+    return parser.parse_args()
+
 
 fp = args.filepath
 E_1 = args.element
