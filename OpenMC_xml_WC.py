@@ -31,14 +31,6 @@ R_W_2 = args.W_outer_radius
 R_C_1 = args.C_inner_radius
 eg = args.energy
 
-# fp = '../../ALARA/data/elelib.std'
-# E_1 = 'W'
-# E_2 = 'C'
-# R_W_1 = 1000
-# R_W_2 = 1005
-# R_C_1 = 995
-# eg = 14E+06
-
 #ALARA Element Library to read density for specified element:
 with open(""+fp+"") as ALARA_Lib:
     Lib_Lines = ALARA_Lib.readlines()
