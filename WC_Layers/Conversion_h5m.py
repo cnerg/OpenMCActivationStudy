@@ -14,8 +14,7 @@ mb.load_file('OpenMC_Mesh.h5m')
 tally = sp.get_tally(id=2)
 
 # Load the mesh
-meshes = sp.meshes
-mesh = meshes[1]
+mesh = sp.meshes[1]
 
 tally_data = tally.get_reshaped_data(value='mean')
 
