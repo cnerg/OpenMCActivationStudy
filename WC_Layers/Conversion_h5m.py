@@ -31,6 +31,6 @@ plt.savefig("Flux_Graph.png")
 # get all tets from the MOAB mesh
 all_tets = mb.get_entities_by_type(0, types.MBTET)
 n_flux_tag = mb.tag_get_handle('FLUX_MESH', 175, types.MB_TYPE_DOUBLE, types.MB_TAG_DENSE, create_if_missing=True)
-mb.tag_set_data(n_flux_tag, all_tets, flux_sum_en[:,:,0,0]) # the shape of the data will need to be checked here
+mb.tag_set_data(n_flux_tag, all_tets, flux_spectra_on_mesh[:,:,0,0]) # the shape of the data will need to be checked here
 
 mb.write_file('Mesh_with_Tally.h5m')
