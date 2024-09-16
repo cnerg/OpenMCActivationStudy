@@ -19,7 +19,7 @@ mesh = sp.meshes[1]
 tally_data = tally.get_reshaped_data(value='mean')
 
 #Summing over cell filter:
-flux_sum_en = tally_data.sum(axis=0)
+flux_spectra_on_mesh = tally_data.sum(axis=0)
 
 ebounds = tally.find_filter(openmc.EnergyFilter).bins
 
