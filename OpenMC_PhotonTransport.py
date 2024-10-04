@@ -129,14 +129,13 @@ def make_spherical_shell(inner_radius_W, outer_radius_W, inner_radius_C, M_1, M_
 
 #Define source:
 def make_source(W_Shell, C_Shell, Cells):
-    Energy_List = []
     Source_List = []
     Particle_Filter = openmc.ParticleFilter('photon')
     Total_Mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
     Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, volume_normalized=False)  
     for index, bound in enumerate(bounds[:-1]):
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
-        Energy_List.append(Energy_Dist)
+        #Source strengths given by Strengths list at the top
         Source = Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=Strengths[index], particle='photon', domains=Cells))
     np.savetxt('Energy_List.txt', Energy_List, fmt='%s')
     return Source_List, Particle_Filter, Total_Mesh, Mesh_Dist
