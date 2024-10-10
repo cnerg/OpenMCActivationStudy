@@ -13,9 +13,6 @@ with openmc.StatePoint("statepoint.10.h5") as sp:
     # Get the reshaped tally data
     tally_data_reshaped = flux_spectrum.get_reshaped_data(value='mean')
 
-    # Print the shape of the tally data
-    print("Tally data shape:", tally_data_reshaped.shape)
-
     flux_sum_en = tally_data_reshaped.sum(axis=(0,1,3,4,5))   
     #Vitamin-J energy filter:
     e_filter = flux_spectrum.filters[2]
