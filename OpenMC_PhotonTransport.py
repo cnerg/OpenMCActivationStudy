@@ -8,7 +8,7 @@ Created on Wed Aug  7 10:07:33 2024
 import openmc
 import argparse
 import numpy as np
-from Source_Mesh_Reader import summed_strengths
+from Source_Mesh_Reader import summed_strengths, strengths_list
 
 Mesh_File = 'OpenMC_Mesh.h5m'
 
@@ -126,10 +126,10 @@ def make_source(W_Shell, C_Shell, Cells):
     Source_List = []
     Particle_Filter = openmc.ParticleFilter('photon')
     Total_Mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
-    Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, volume_normalized=False)  
     for index, bound in enumerate(bounds[:-1]):
+        Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, strengths=strengths_list[index], volume_normalized=False)
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
-        #Source strengths given by Strengths list at the top
+        #Source strengths given by strengths_list created by Source_Mesh_Reader
         Source = Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=summed_strengths[index], particle='photon', domains=Cells))
     return Source_List, Particle_Filter, Total_Mesh, Mesh_Dist
 
