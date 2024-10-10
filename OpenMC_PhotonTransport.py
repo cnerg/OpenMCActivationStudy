@@ -14,9 +14,7 @@ Strengths = []
 #Performing simulation for the first decay time
 with open('Sum_1.txt', 'r') as Sum_1:
     Lines = Sum_1.readlines()
-    Split = Lines[0].split()
-    for sums in Split:
-        Strengths.append(float(sums))
+    strengths = [float(strength) for strength in Lines[0].split()]
 
 parser = argparse.ArgumentParser(description="Specify required inputs: file path to ALARA Element Library, element name, inner radius [cm], outer_radius [cm]")
 
