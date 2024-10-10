@@ -135,7 +135,6 @@ def make_source(W_Shell, C_Shell, Cells):
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
         #Source strengths given by Strengths list at the top
         Source = Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=Strengths[index], particle='photon', domains=Cells))
-    np.savetxt('Energy_List.txt', Energy_List, fmt='%s')
     return Source_List, Particle_Filter, Total_Mesh, Mesh_Dist
 
 # Define tallies
