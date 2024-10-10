@@ -8,13 +8,9 @@ Created on Wed Aug  7 10:07:33 2024
 import openmc
 import argparse
 import numpy as np
+from Source_Mesh_Reader import summed_strengths
 
 Mesh_File = 'OpenMC_Mesh.h5m'
-Strengths = []
-#Performing simulation for the first decay time
-with open('Sum_1.txt', 'r') as Sum_1:
-    Lines = Sum_1.readlines()
-    strengths = [float(strength) for strength in Lines[0].split()]
 
 parser = argparse.ArgumentParser(description="Specify required inputs: file path to ALARA Element Library, element name, inner radius [cm], outer_radius [cm]")
 
@@ -134,7 +130,7 @@ def make_source(W_Shell, C_Shell, Cells):
     for index, bound in enumerate(bounds[:-1]):
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
         #Source strengths given by Strengths list at the top
-        Source = Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=Strengths[index], particle='photon', domains=Cells))
+        Source = Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=summed_strengths[index], particle='photon', domains=Cells))
     return Source_List, Particle_Filter, Total_Mesh, Mesh_Dist
 
 # Define tallies
