@@ -30,12 +30,12 @@ for file_index, file in enumerate(Files):
         for tet_element in sd:
             source.write(' '.join(map(str, tet_element)) + '\n')
 
-    # Calculate summed strengths for each photon group
+    # Calculate summed (and individual mesh) strengths for each photon group
     summed_strengths = []
+    strengths_list = []
     for group in range(photon_groups):
-        strengths = np.sum(sd[:, group])  # Sum over all mesh elements
-        summed_strengths.append(strengths)
-
-    # Write summed strengths to a separate file for each mesh
-    with open(f'summed_photon_strengths_{file_index + 1}.txt', 'w') as sums:
-        sums.write(' '.join(map(str, summed_strengths)) + '\n')
+        total_strengths = np.sum(sd[:, group])  # Sum over all mesh elements
+        summed_strengths.append(total_strengths)
+        strengths = sd[:,group]
+        strengths_list.append(strengths)
+        
