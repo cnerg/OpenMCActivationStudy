@@ -9,6 +9,8 @@ import openmc
 import argparse
 import numpy as np
 from Source_Mesh_Reader import summed_strengths, strengths_list
+from TwoLayers_Materials import *
+from TwoLayers_Geometry import *
 
 Mesh_File = 'OpenMC_Mesh.h5m'
 
