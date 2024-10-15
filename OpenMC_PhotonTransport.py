@@ -65,14 +65,16 @@ bounds = [0,
                  2.00e+7]
 
 #ALARA Element Library to read density for specified element:
-# with open(""+fp+"") as ALARA_Lib:
-with open("elelib.std") as ALARA_Lib:
-    Lib_Lines = ALARA_Lib.readlines()
+def mat_lib(filepath):  
+    with open(""+filepath+"") as ALARA_Lib:
+    #with open("elelib.std") as ALARA_Lib:
+        Lib_Lines = ALARA_Lib.readlines()
+    return Lib_Lines
 
 # Create materials & export to XML:
 #Simulating tungsten shell:
   
-def make_W(element_1):
+def make_W(element_1, Lib_Lines):
     M_1 = openmc.Material(material_id=1, name=element_1)
     for line in Lib_Lines:
         if line.split()[0].lower() == element_1.lower():
@@ -81,7 +83,7 @@ def make_W(element_1):
     M_1.add_element(element_1, 1.00)
     return M_1
 
-def make_C(element_2):
+def make_C(element_2, Lib_Lines):
     M_2 = openmc.Material(material_id=2, name=element_2)
     for line in Lib_Lines:
         if line.split()[0].lower() == element_2.lower():
@@ -135,15 +137,12 @@ def make_source(W_Shell, C_Shell, Cells):
 
 # Define tallies
 def tallies(W_Shell, C_Shell, Particle_Filter, Total_Mesh):
-    # global Total_Mesh
-    # global Total_Filter
     Total_Filter = openmc.MeshFilter(Total_Mesh)
     
     neutron_tally = openmc.Tally(tally_id=1, name="Neutron tally")
     neutron_tally.scores = ['flux', 'elastic', 'absorption']
     
     # Implementing filter for neutron tally through W shell
-    global cell_filter
     cell_filter = openmc.CellFilter([W_Shell, C_Shell])
     neutron_tally.filters = [cell_filter, Total_Filter]
 
@@ -179,9 +178,10 @@ def plot_universe(Void, W_Shell, C_Shell, Cells):
     return universe_ss
 
 # Exporting materials, geometry, and tallies to .xml
-def export_to_xml(element_1, element_2, inner_radius_W, outer_radius_W, inner_radius_C):
-    OpenMC_W = make_W(element_1)
-    OpenMC_C = make_C(element_2)
+def export_to_xml(filepath, element_1, element_2, inner_radius_W, outer_radius_W, inner_radius_C):
+    OpenMC_SF = mat_lib(filepath)
+    OpenMC_W = make_W(element_1, OpenMC_SF)
+    OpenMC_C = make_C(element_2, OpenMC_SF)
     OpenMC_Mat = all_mat(OpenMC_W, OpenMC_C)
     OpenMC_Geometry = make_spherical_shell(inner_radius_W, outer_radius_W, inner_radius_C, OpenMC_W, OpenMC_C)
     OpenMC_Source = make_source(OpenMC_Geometry[2], OpenMC_Geometry[3], OpenMC_Geometry[4])
@@ -189,6 +189,6 @@ def export_to_xml(element_1, element_2, inner_radius_W, outer_radius_W, inner_ra
     OpenMC_Tallies = tallies(OpenMC_Geometry[2], OpenMC_Geometry[3], OpenMC_Source[1], OpenMC_Source[2])
     OpenMC_Universe = plot_universe(OpenMC_Geometry[1], OpenMC_Geometry[2], OpenMC_Geometry[3], OpenMC_Geometry[4])
     #return OpenMC_Materials, OpenMC_Geometry, OpenMC_Source, OpenMC_Settings, OpenMC_Tallies, OpenMC_Universe
-    return OpenMC_W, OpenMC_C, *OpenMC_Geometry, *OpenMC_Source, OpenMC_Settings, *OpenMC_Tallies
-
-M_1, M_2, geometry, Void, W_Shell, C_Shell, Cells, Source_List, Particle_Filter, Total_Mesh, Mesh_Dist, tall, neutron_tally, spectrum_tally, Total_Filter, cell_filter, sets = export_to_xml(E_1, E_2, R_W_1, R_W_2, R_C_1)
+    return OpenMC_SF, OpenMC_W, OpenMC_C, *OpenMC_Geometry, *OpenMC_Source, OpenMC_Settings, *OpenMC_Tallies
+    
+Lib_Lines, M_1, M_2, geometry, Void, W_Shell, C_Shell, Cells, Source_List, Particle_Filter, Total_Mesh, Mesh_Dist, tall, neutron_tally, spectrum_tally, Total_Filter, cell_filter, sets = export_to_xml(fp, E_1, E_2, R_W_1, R_W_2, R_C_1)
