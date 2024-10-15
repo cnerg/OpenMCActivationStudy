@@ -66,65 +66,6 @@ bounds = [0,
                  1.40e+7, 
                  2.00e+7]
 
-#ALARA Element Library to read density for specified element:
-def mat_lib(filepath):  
-    with open(""+filepath+"") as ALARA_Lib:
-    #with open("elelib.std") as ALARA_Lib:
-        Lib_Lines = ALARA_Lib.readlines()
-    return Lib_Lines
-
-# Create materials & export to XML:
-#Simulating tungsten shell:
-  
-def make_W(element_1, Lib_Lines):
-    M_1 = openmc.Material(material_id=1, name=element_1)
-    for line in Lib_Lines:
-        if line.split()[0].lower() == element_1.lower():
-            Density_M_1 = float(line.strip().split()[3])
-            M_1.set_density('g/cm3', Density_M_1)
-    M_1.add_element(element_1, 1.00)
-    return M_1
-
-def make_C(element_2, Lib_Lines):
-    M_2 = openmc.Material(material_id=2, name=element_2)
-    for line in Lib_Lines:
-        if line.split()[0].lower() == element_2.lower():
-        #if line.startswith(element_2.lower()):
-            Density_M_2 = float(line.strip().split()[3])
-            M_2.set_density('g/cm3', Density_M_2)
-    M_2.add_element(element_2, 1.00)
-    return M_2
-
-def all_mat(M_1, M_2):
-    all_materials = openmc.Materials([M_1, M_2])
-    all_materials.cross_sections = '../fendl-3.2-hdf5/cross_sections.xml'
-    all_materials.export_to_xml()
-    
-# Create geometry
-#Spherical shell:
-def make_spherical_shell(inner_radius_W, outer_radius_W, inner_radius_C, M_1, M_2):    
-    S_W_1= openmc.Sphere(r=inner_radius_W) #sphere of radius 1000cm
-    inside_W_sphere_1 = -S_W_1
-    outside_W_sphere_1 = +S_W_1
-    S_W_2 = openmc.Sphere(r=outer_radius_W, boundary_type='vacuum')
-    inside_W_sphere_2 = -S_W_2
-    outside_W_sphere_2 = +S_W_2
-    S_W_3 = outside_W_sphere_1 & inside_W_sphere_2 #filled with specified material
-      
-    S_C_1= openmc.Sphere(r=inner_radius_C) #sphere of radius 995cm
-    inside_C_sphere_1 = -S_C_1
-    outside_C_sphere_1 = +S_C_1
-    S_C_3 = outside_C_sphere_1 & inside_W_sphere_1 #filled with specified material    
-
-    # Mapping materials to geometry:
-    Void = openmc.Cell(fill=None, region = inside_C_sphere_1)
-    W_Shell = openmc.Cell(fill=M_1, region=S_W_3)
-    C_Shell = openmc.Cell(fill=M_2, region=S_C_3)
-    Cells = [Void, W_Shell, C_Shell]
-    geometry = openmc.Geometry(Cells)
-    geometry.export_to_xml()
-    return geometry, Void, W_Shell, C_Shell, Cells
-
 #Define source:
 def make_source(W_Shell, C_Shell, Cells):
     Source_List = []
