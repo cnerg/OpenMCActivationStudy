@@ -123,8 +123,9 @@ def plot_universe(Void, W_Shell, C_Shell, Cells):
 # Exporting materials, geometry, and tallies to .xml
 def export_to_xml(filepath, element_1, element_2, inner_radius_W, outer_radius_W, inner_radius_C):
     OpenMC_SF = mat_lib(filepath)
-    OpenMC_W = make_W(element_1, OpenMC_SF)
-    OpenMC_C = make_C(element_2, OpenMC_SF)
+    materials = []
+    for material_id, element in enumerate(elements):
+         materials.append(make_element(element, material_id+1, OpenMC_SF))
     OpenMC_Mat = all_mat(OpenMC_W, OpenMC_C)
     OpenMC_Geometry = make_spherical_shell(inner_radius_W, outer_radius_W, inner_radius_C, OpenMC_W, OpenMC_C)
     OpenMC_Source = make_source(OpenMC_Geometry[2], OpenMC_Geometry[3], OpenMC_Geometry[4])
