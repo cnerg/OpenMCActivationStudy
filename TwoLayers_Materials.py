@@ -9,33 +9,24 @@ import openmc
 #ALARA Element Library to read density for specified element:
 def mat_lib(filepath):  
     with open(""+filepath+"") as ALARA_Lib:
-    #with open("elelib.std") as ALARA_Lib:
         Lib_Lines = ALARA_Lib.readlines()
     return Lib_Lines
-
+    
+def create_densities(elements, Lib_Lines):
+    density_dict = {}
+    for element in elements:
+        for line in Lib_Lines:
+            if line.split()[0].lower() == element.lower():
+                density_dict[element] = float(line.strip().split()[3])
+    return density_dict  
+    
 # Create materials & export to XML:
 #Simulating tungsten shell:
-  
-def make_W(element_1, Lib_Lines):
-    M_1 = openmc.Material(material_id=1, name=element_1)
-    for line in Lib_Lines:
-        if line.split()[0].lower() == element_1.lower():
-            Density_M_1 = float(line.strip().split()[3])
-            M_1.set_density('g/cm3', Density_M_1)
-    M_1.add_element(element_1, 1.00)
-    return M_1
-
-def make_C(element_2, Lib_Lines):
-    M_2 = openmc.Material(material_id=2, name=element_2)
-    for line in Lib_Lines:
-        if line.split()[0].lower() == element_2.lower():
-        #if line.startswith(element_2.lower()):
-            Density_M_2 = float(line.strip().split()[3])
-            M_2.set_density('g/cm3', Density_M_2)
-    M_2.add_element(element_2, 1.00)
-    return M_2
-
-def all_mat(M_1, M_2):
-    all_materials = openmc.Materials([M_1, M_2])
-    all_materials.cross_sections = '../fendl-3.2-hdf5/cross_sections.xml'
-    all_materials.export_to_xml()
+def make_element(elements, density_dict):
+    mats = openmc.Materials([])
+    for element_id, element in enumerate(elements):
+        mat = openmc.Material(material_id=element_id+1, name=element)
+        mat.add_element(element, 1.00)
+        mat.set_density('g/cm3', density_dict.get(f'{element}'))
+        mats.append(mat)
+    return mats
