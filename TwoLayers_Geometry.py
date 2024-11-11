@@ -10,13 +10,9 @@ import openmc
 # Create geometry
 #Spherical shell:
 def make_spherical_shell(inner_radius_W, outer_radius_W, inner_radius_C, M_1, M_2):    
-    S_W_1= openmc.Sphere(r=inner_radius_W) #sphere of radius 1000cm
-    inside_W_sphere_1 = -S_W_1
-    outside_W_sphere_1 = +S_W_1
-    S_W_2 = openmc.Sphere(r=outer_radius_W, boundary_type='vacuum')
-    inside_W_sphere_2 = -S_W_2
-    outside_W_sphere_2 = +S_W_2
-    S_W_3 = outside_W_sphere_1 & inside_W_sphere_2 #filled with specified material
+    inner_W_sphere= openmc.Sphere(r=inner_radius_W) #sphere of radius 1000cm
+    outer_W_sphere = openmc.Sphere(r=outer_radius_W, boundary_type='vacuum')
+    W_region = +inner_W_sphere & -outer_W_sphere
       
     S_C_1= openmc.Sphere(r=inner_radius_C) #sphere of radius 995cm
     inside_C_sphere_1 = -S_C_1
