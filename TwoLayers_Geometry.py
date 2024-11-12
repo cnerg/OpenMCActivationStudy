@@ -6,6 +6,7 @@ Created on Fri Oct 11 15:56:57 2024
 """
 
 import openmc
+from TwoLayers_Materials import *
 
 # Create geometry
 #Spherical shell:
