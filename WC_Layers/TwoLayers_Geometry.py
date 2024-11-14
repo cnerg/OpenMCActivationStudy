@@ -6,25 +6,25 @@ Created on Fri Oct 11 15:56:57 2024
 """
 
 import openmc
-from TwoLayers_Materials import *
 
 # Create geometry
 #Spherical shell:
-def make_spherical_shell(inner_radius_W, outer_radius_W, inner_radius_C, M_1, M_2):    
-    inner_W_sphere= openmc.Sphere(r=inner_radius_W) #sphere of radius 1000cm
-    outer_W_sphere = openmc.Sphere(r=outer_radius_W, boundary_type='vacuum')
-    W_region = +inner_W_sphere & -outer_W_sphere
-      
-    S_C_1= openmc.Sphere(r=inner_radius_C) #sphere of radius 995cm
-    inside_C_sphere_1 = -S_C_1
-    outside_C_sphere_1 = +S_C_1
-    S_C_3 = outside_C_sphere_1 & inside_W_sphere_1 #filled with specified material    
-
-    # Mapping materials to geometry:
-    Void = openmc.Cell(fill=None, region = inside_C_sphere_1)
-    W_Shell = openmc.Cell(fill=M_1, region=S_W_3)
-    C_Shell = openmc.Cell(fill=M_2, region=S_C_3)
-    Cells = [Void, W_Shell, C_Shell]
-    geometry = openmc.Geometry(Cells)
-    geometry.export_to_xml()
-    return geometry, Void, W_Shell, C_Shell, Cells
+def make_spherical_shells(layers, inner_radius):    
+    '''
+    Creates a set of concentric spherical shells, each with its own material & inner/outer radius.
+    
+    layers: list of tuples with OpenMC Material name and thickness: (material, thickness)
+    inner_radius: the radius of the innermost spherical shell
+    '''
+    inner_sphere = openmc.Sphere(r = inner_radius)
+    cells = [openmc.Cell(fill = None, region = -inner_sphere)]
+    for (material, thickness) in layers:
+        outer_radius = inner_radius + thickness
+        outer_sphere = openmc.Sphere(r = outer_radius)
+        cells.append(openmc.Cell(fill = material, region = +inner_sphere & -outer_sphere))
+        outer_radius = inner_radius
+        outer_sphere = inner_sphere
+    outer_sphere.boundary_type = 'vacuum'     
+    cells.append(openmc.Cell(fill = None, region = +outer_sphere)) 
+    geometry = openmc.Geometry(cells)    
+    return geometry
