@@ -58,3 +58,9 @@ def write_source_density(sd_list, sd_filename):
         with open(f'{sd_filename}_{sd_index + 1}.txt', 'w') as source:
             for tet_element in source_density:
                 source.write(' '.join(map(str, tet_element)) + '\n')
+                
+def extract_arrange_write_sd(Files, photon_groups, sd_filename):
+    data_extractor = extract_source_data(Files)
+    strength_arranger = arrange_source_strengths(data_extractor, photon_groups)
+    write_source_density(data_extractor, sd_filename)
+    return data_extractor, strength_arranger
