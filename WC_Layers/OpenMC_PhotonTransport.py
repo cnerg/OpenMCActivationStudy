@@ -8,7 +8,7 @@ Created on Wed Aug  7 10:07:33 2024
 import openmc
 import argparse
 import numpy as np
-from Source_Mesh_Reader import summed_strengths, strengths_list
+from Source_Mesh_Reader import data_extractor
 from TwoLayers_Materials import *
 from TwoLayers_Geometry import *
 
@@ -72,10 +72,10 @@ def make_source(W_Shell, C_Shell, Cells):
     Particle_Filter = openmc.ParticleFilter('photon')
     Total_Mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
     for index, bound in enumerate(bounds[:-1]):
-        Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, strengths=strengths_list[index], volume_normalized=False)
+        Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, strengths=data_extractor[mesh_index][:,index], volume_normalized=False)
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
         #Source strengths given by strengths_list created by Source_Mesh_Reader
-        Source = Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=summed_strengths[index], particle='photon', domains=Cells))
+        Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=np.sum(data_extractor[mesh_index][:, index]), particle='photon', domains=Cells))
     return Source_List, Particle_Filter, Total_Mesh, Mesh_Dist
 
 # Define tallies
