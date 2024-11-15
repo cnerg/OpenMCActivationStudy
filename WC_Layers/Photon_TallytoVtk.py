@@ -18,7 +18,7 @@ def read_statepoint(sp_filename, flux_spectrum_tally_id, mesh_number, summed_axe
         e_filter = flux_spectrum.filters[energy_filter_index]
         #Lower bounds of the energy bins
         e_filter_lower = e_filter.bins[:, 0]
-        return e_filter_lower, flux_sum_energy, tally_data_reshaped, mesh
+    return e_filter_lower, flux_sum_energy, tally_data_reshaped, mesh
 
 def plot_flux_data(e_filter_lower, flux_sum_energy, figure_filename):
     # Plot flux spectrum
