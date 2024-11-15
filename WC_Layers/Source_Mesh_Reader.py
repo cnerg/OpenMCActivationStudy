@@ -31,6 +31,21 @@ def extract_source_data(Files):
         sd_list.append(sd)
     return sd_list
     
+def arrange_source_strengths(sd_list, photon_groups):
+    '''
+    Writes individual mesh element strengths (separated by energy group) to density_list, 
+    then writes density_list to all_strengths_list for each set of source densities. 
+    '''
+    all_strengths_list = []
+    for density in sd_list:
+        density_list = []
+        # Calculate (individual mesh) strengths for each photon group
+        for group in range(photon_groups):
+            strengths = density[:,group]
+            density_list.append(strengths)
+        all_strengths_list.append(density_list)    
+    return all_strengths_list    
+
 def write_source_density(sd_list, sd_filename):
     '''
     Writes each of the specified source density datasets to a text file.
@@ -43,13 +58,3 @@ def write_source_density(sd_list, sd_filename):
         with open(f'{sd_filename}_{sd_index + 1}.txt', 'w') as source:
             for tet_element in source_density:
                 source.write(' '.join(map(str, tet_element)) + '\n')
-
-# Calculate summed (and individual mesh) strengths for each photon group
-summed_strengths = []
-strengths_list = []
-for group in range(photon_groups):
-    total_strengths = np.sum(sd[:, group])  # Sum over all mesh elements
-    summed_strengths.append(total_strengths)
-    strengths = sd[:,group]
-    strengths_list.append(strengths)
-        
