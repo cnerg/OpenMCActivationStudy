@@ -16,12 +16,12 @@ Files = [File_1, File_2]
 # Number of photon groups
 photon_groups = 24
 
-def extract_source_data(Files):
+def extract_source_data(file_list):
     '''
     Identifies the location of the source density dataset within each mesh file.
     '''
     sd_list = []
-    for file in Files:
+    for file in file_list:
         # Extract data from the current file
         tstt = file['tstt']
         elements = tstt['elements']
@@ -59,7 +59,7 @@ def write_source_density(sd_list, sd_filename):
             for tet_element in source_density:
                 source.write(' '.join(map(str, tet_element)) + '\n')
                 
-def extract_arrange_write_sd(Files, photon_groups, sd_filename):
+def extract_arrange_write_sd(file_list, photon_groups, sd_filename):
     data_extractor = extract_source_data(Files)
     strength_arranger = arrange_source_strengths(data_extractor, photon_groups)
     write_source_density(data_extractor, sd_filename)
