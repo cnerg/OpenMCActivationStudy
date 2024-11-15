@@ -8,13 +8,12 @@ Created on Mon Sep 30 15:16:44 2024
 import h5py
 import numpy as np
 
+source_density_name = 'source_density'
+
 # Open the HDF5 files
 File_1 = h5py.File("source_mesh_1.h5m", 'r')
 File_2 = h5py.File("source_mesh_2.h5m", 'r')
 Files = [File_1, File_2]
-
-# Number of photon groups
-photon_groups = 24
 
 def extract_source_data(file_list):
     '''
@@ -59,8 +58,7 @@ def write_source_density(sd_list, sd_filename):
             for tet_element in source_density:
                 source.write(' '.join(map(str, tet_element)) + '\n')
                 
-def extract_arrange_write_sd(file_list, photon_groups, sd_filename):
-    data_extractor = extract_source_data(Files)
-    strength_arranger = arrange_source_strengths(data_extractor, photon_groups)
+def extract_write_sd(file_list, sd_filename):
+    data_extractor = extract_source_data(file_list)
     write_source_density(data_extractor, sd_filename)
-    return data_extractor, strength_arranger
+    return data_extractor
