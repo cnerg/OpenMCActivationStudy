@@ -71,17 +71,17 @@ bounds = [0,
 #Define source:
 def make_source(W_Shell, C_Shell, Cells):
     Source_List = []
-    Particle_Filter = openmc.ParticleFilter('photon')
     Total_Mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
     for index, bound in enumerate(bounds[:-1]):
         Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
         #Source strengths given by strengths_list created by Source_Mesh_Reader
         Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=Cells))
-    return Source_List, Particle_Filter, Total_Mesh, Mesh_Dist
+    return Source_List, Total_Mesh, Mesh_Dist
 
 # Define tallies
 def tallies(W_Shell, C_Shell, Particle_Filter, Total_Mesh):
+    Particle_Filter = openmc.ParticleFilter('photon')
     Total_Filter = openmc.MeshFilter(Total_Mesh)
     
     neutron_tally = openmc.Tally(tally_id=1, name="Neutron tally")
@@ -102,7 +102,7 @@ def tallies(W_Shell, C_Shell, Particle_Filter, Total_Mesh):
     
     tall = openmc.Tallies([neutron_tally, spectrum_tally])
     tall.export_to_xml()
-    return tall, neutron_tally, spectrum_tally, Total_Filter, cell_filter
+    return tall, neutron_tally, spectrum_tally, Particle_Filter, Total_Filter, cell_filter
 
 # Assign simulation settings
 def settings(Source_List):
