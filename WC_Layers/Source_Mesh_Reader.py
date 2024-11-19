@@ -28,37 +28,21 @@ def extract_source_data(file_list):
         tags = tet_four['tags']
         sd = tags['source_density'][:]
         sd_list.append(sd)
-    return sd_list
-    
-def arrange_source_strengths(sd_list, photon_groups):
-    '''
-    Writes individual mesh element strengths (separated by energy group) to density_list, 
-    then writes density_list to all_strengths_list for each set of source densities. 
-    '''
-    all_strengths_list = []
-    for density in sd_list:
-        density_list = []
-        # Calculate (individual mesh) strengths for each photon group
-        for group in range(photon_groups):
-            strengths = density[:,group]
-            density_list.append(strengths)
-        all_strengths_list.append(density_list)    
-    return all_strengths_list    
+    return sd_list  
 
-def write_source_density(sd_list, sd_filename):
+def save_source_density(sd_list, sd_filename):
     '''
-    Writes each of the specified source density datasets to a text file.
+    Saves source density data as a text file.
     
     sd_list: list of source density datasets from h5m files
     sd_filename: user-provided filename that appears as a prefix for the text files
     '''
     for sd_index, source_density in enumerate(sd_list):
-        # Write source density to a separate file for each mesh
         with open(f'{sd_filename}_{sd_index + 1}.txt', 'w') as source:
             for tet_element in source_density:
                 source.write(' '.join(map(str, tet_element)) + '\n')
                 
-def extract_write_sd(file_list, sd_filename):
+def extract_save_sd(file_list, sd_filename):
     data_extractor = extract_source_data(file_list)
-    write_source_density(data_extractor, sd_filename)
+    save_source_density(data_extractor, sd_filename)
     return data_extractor
