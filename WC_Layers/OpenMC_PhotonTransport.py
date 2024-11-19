@@ -77,9 +77,8 @@ def make_source(cells):
     for index, bound in enumerate(bounds[:-1]):
         Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
-        #Source strengths given by strengths_list created by Source_Mesh_Reader
         Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
-    return Source_List, Total_Mesh, Mesh_Dist
+    return Source_List, Total_Mesh
 
 # Define tallies
 def tallies(W_Shell, C_Shell, Particle_Filter, Total_Mesh):
@@ -139,4 +138,4 @@ def export_to_xml(filepath, element_1, element_2, inner_radius_W, outer_radius_W
     #return OpenMC_Materials, OpenMC_Geometry, OpenMC_Source, OpenMC_Settings, OpenMC_Tallies, OpenMC_Universe
     return OpenMC_SF, OpenMC_W, OpenMC_C, *OpenMC_Geometry, *OpenMC_Source, OpenMC_Settings, *OpenMC_Tallies
     
-Lib_Lines, M_1, M_2, geometry, Void, W_Shell, C_Shell, Cells, Source_List, Particle_Filter, Total_Mesh, Mesh_Dist, tall, neutron_tally, spectrum_tally, Total_Filter, cell_filter, sets = export_to_xml(fp, E_1, E_2, R_W_1, R_W_2, R_C_1)
+Lib_Lines, M_1, M_2, geometry, Void, W_Shell, C_Shell, Cells, Source_List, Particle_Filter, Total_Mesh, tall, neutron_tally, spectrum_tally, Total_Filter, cell_filter, sets = export_to_xml(fp, E_1, E_2, R_W_1, R_W_2, R_C_1)
