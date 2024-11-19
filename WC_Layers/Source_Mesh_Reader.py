@@ -18,6 +18,10 @@ Files = [File_1, File_2]
 def extract_source_data(file_list):
     '''
     Identifies the location of the source density dataset within each mesh file.
+    
+    input: list of .h5m mesh files (opened by h5py) containing photon source information
+    output: numpy array of source density data with rows = # of mesh elements and 
+    columns = # number of photon groups, with one array per source mesh
     '''
     sd_list = np.ndarray((len(file_list), num_elements, photon_groups))
 
