@@ -15,6 +15,7 @@ from TwoLayers_Geometry import *
 Mesh_File = 'OpenMC_Mesh.h5m'
 mesh_index = 0
 esd = extract_source_data(Files)
+inner_radius = 995
 
 parser = argparse.ArgumentParser(description="Specify required inputs: file path to ALARA Element Library, element name, inner radius [cm], outer_radius [cm]")
 
