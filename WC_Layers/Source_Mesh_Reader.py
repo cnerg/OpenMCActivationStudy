@@ -19,15 +19,10 @@ def extract_source_data(file_list):
     '''
     Identifies the location of the source density dataset within each mesh file.
     '''
-    sd_list = []
-    for file in file_list:
-        # Extract data from the current file
-        tstt = file['tstt']
-        elements = tstt['elements']
-        tet_four = elements['Tet4']
-        tags = tet_four['tags']
-        sd = tags['source_density'][:]
-        sd_list.append(sd)
+    sd_list = np.ndarray((len(file_list), num_elements, photon_groups))
+
+    for file_num, file in enumerate(file_list):
+        sd_list[file_num,:] = file['tstt']['elements']['Tet4']['tags']['source_density'][:]
     return sd_list  
 
 def save_source_density(sd_list, sd_filename):
