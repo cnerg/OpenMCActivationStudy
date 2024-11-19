@@ -12,6 +12,7 @@ from Source_Mesh_Reader import extract_source_data, Files
 from TwoLayers_Materials import *
 from TwoLayers_Geometry import *
 
+# These will be moved to a yaml file
 Mesh_File = 'OpenMC_Mesh.h5m'
 mesh_index = 0
 esd = extract_source_data(Files)
@@ -70,14 +71,14 @@ bounds = [0,
                  2.00e+7]
 
 #Define source:
-def make_source(W_Shell, C_Shell, Cells):
+def make_source(cells):
     Source_List = []
     Total_Mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
     for index, bound in enumerate(bounds[:-1]):
         Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
         Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
         #Source strengths given by strengths_list created by Source_Mesh_Reader
-        Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=Cells))
+        Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
     return Source_List, Total_Mesh, Mesh_Dist
 
 # Define tallies
