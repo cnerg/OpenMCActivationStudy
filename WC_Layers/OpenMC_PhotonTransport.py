@@ -90,7 +90,7 @@ def tallies(total_mesh):
     
     # Implementing filter for neutron tally through shells with material
     cell_filter = openmc.CellFilter(cells_w_mats)
-    neutron_tally.filters = [cell_filter, Total_Filter]
+    neutron_tally.filters = [cell_filter, total_filter]
 
     # Vitamin-J energy filter created to assign to the flux tally.
     energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-42")
@@ -136,4 +136,4 @@ def export_to_xml(filepath, element_1, element_2, inner_radius_W, outer_radius_W
     #return OpenMC_Materials, OpenMC_Geometry, OpenMC_Source, OpenMC_Settings, OpenMC_Tallies, OpenMC_Universe
     return OpenMC_SF, OpenMC_W, OpenMC_C, *OpenMC_Geometry, *OpenMC_Source, OpenMC_Settings, *OpenMC_Tallies
     
-Lib_Lines, M_1, M_2, geometry, Void, W_Shell, C_Shell, Cells, Source_List, Particle_Filter, Total_Mesh, tall, neutron_tally, spectrum_tally, Total_Filter, cell_filter, sets = export_to_xml(fp, E_1, E_2, R_W_1, R_W_2, R_C_1)
+Lib_Lines, M_1, M_2, geometry, Void, W_Shell, C_Shell, Cells, source_list, particle_filter, total_mesh, tall, neutron_tally, spectrum_tally, total_filter, cell_filter, sets = export_to_xml(fp, E_1, E_2, R_W_1, R_W_2, R_C_1)
