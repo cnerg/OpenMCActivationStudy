@@ -33,7 +33,6 @@ with open(""+fp+"") as ALARA_Lib:
 
 # Create materials & export to XML:
 #Simulating tungsten shell:
-print(E_1)   
 def make_material(element):
     M_1 = openmc.Material()
     for line in Lib_Lines:
