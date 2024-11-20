@@ -12,11 +12,6 @@ import matplotlib.colors as mcolors
 import pandas as pd
 import random
 
-# Importing Vitamin-J energy group structure:
-# This excel file contains the energy bounds of the Vitamin J structure
-# Vit_J = pd.read_excel('VitaminJEnergyGroupStructure.xlsx')
-# ebounds = Vit_J.iloc[:, 1]
-
 openmc.config['chain_file'] = 'chain_endfb71_sfr.xml'
 
 # Create materials & export to XML:
@@ -68,7 +63,7 @@ cell_filter = openmc.CellFilter([Shell])
 neutron_tally.filters = [cell_filter]
 
 # Creating a tally to get the flux energy spectrum.
-# An energy filter is created to assign to the flux tally using the Vitamin J structure.
+# An energy filter is created to assign to the flux tally.
 energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-175")
 
 spectrum_tally = openmc.Tally(name="Flux spectrum")
@@ -76,76 +71,88 @@ spectrum_tally = openmc.Tally(name="Flux spectrum")
 spectrum_tally.filters = [energy_filter_flux, cell_filter]
 spectrum_tally.scores = ['flux']
 
+universe_ss = openmc.Universe(cells=Cells)
+Plot = universe_ss.plot(width=(2500.0, 2500.0), basis='xz',
+              colors={Void: 'blue', Shell: 'red'}, legend=True)
+Plot.figure.savefig('Universe.png')
+
 # Collecting and exporting tallies to .xml
 tallies = openmc.Tallies([neutron_tally, spectrum_tally])
 tallies.export_to_xml()
+
+#----------------------------------------------------------------------------
+#Beginning of the depletion model:
 
 model = openmc.model.Model(geometry=geometry,settings=settings)
 #Depletion calculation
 W.depletable = True
 W.volume = 4.0/3.0 * np.pi * (R_2**3 - R_1**3) #volume of W wall material
-fluxes, micros = openmc.deplete.get_microxs_and_flux(model, Cells)
-operator = openmc.deplete.IndependentOperator(materials, fluxes[0:1], micros[0:1],normalization_mode='source-rate')
-# operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
-time_steps = [3e8, 86400, 2.6e6]
-source_rates = [1E+18, 0, 0]
-integrator = openmc.deplete.PredictorIntegrator(operator=operator, timesteps=time_steps, source_rates=source_rates, timestep_units='s')
+operator = openmc.deplete.CoupledOperator(model, normalization_mode='source-rate')
+time_steps = [3E+8, 86400, 2.6E+6]
+source_rates = [1E+18, 0,0]
+integrator = openmc.deplete.PredictorIntegrator(operator, time_steps, source_rates=source_rates, timestep_units='s')
 integrator.integrate()
 
-#Opening statepoint file to read tallies:
+#Statepoint file to read tallies:
 with openmc.StatePoint('statepoint.10.h5') as sp:
     fl = sp.get_tally(name="Flux spectrum")
     nt = sp.get_tally(name="Neutron tally")
-    
+
 # Get the neutron energies from the energy filter
 energy_filter_fl = fl.filters[0]
 energies_fl = energy_filter_fl.bins[:, 0]
 
 # Get the neutron flux values
 flux = fl.get_values(value='mean').ravel()
-
+    
 #Neutron flux/elastic/absorption tallies:
 tal = nt.get_values(value='mean').ravel()
-print(tal)
 
-Flux_Data = np.c_[energies_fl, flux]
-#Creating an excel file that stores flux data for each energy bin (used as input for ALARA)
+#Saving neutron flux values to csv file
 #Dividing by volume to obtain proper units of flux (#/cm^2-s)
 Flux_Data = np.c_[energies_fl, flux/W.volume]
+#print(Flux_Data[1])
 #ALARA flux inputs go from high energy to low energy
 Flux_Data_ALARA = Flux_Data[::-1]
 FD_CSV = pd.DataFrame(Flux_Data_ALARA, columns=['Energy [eV]', 'Flux [n-cm/sp]'])
 FD_CSV.to_csv('Neutron_Flux.csv', index=False)
 
 Tallies_CSV = pd.DataFrame(tal)
-#Creating a csv file that stores total tally value data
-Tallies_CSV.to_csv('Tally_Values.csv', index=False)
-
+Tallies_CSV.to_csv('Tally_Values.csv')
+                                           
 # Depletion results file
 results = openmc.deplete.Results(filename='depletion_results.h5')
 
-# Stable W nuclides present at beginning of operation (will not be plotted)
-stable_nuc = ['W180', 'W182', 'W183', 'W184', 'W186']  
+# Stable W nuclides present at beginning of operation:
+stable_nuc = ['W180', 'W182', 'W183', 'W184', 'W186']    
 
-#Store list of nuclides from last timestep as a Materials object
-materials_last = results.export_to_materials(-1)
-# Storing depletion data from 1st material
-mat_dep = materials_last[0]
-# Obtaining the list of nuclides from the results file
-nuc_last = mat_dep.get_nuclides()
+materials_list=[]
+#Store list of nuclides from each timestep as a Materials object
+for step in range(len(time_steps)):
+    materials_object = results.export_to_materials(step)
+    # Storing depletion data from 1st material
+    mat_dep = materials_object[0]
+    # Obtaining the list of nuclides in the results file
+    rad_nuc = mat_dep.get_nuclides()
+    materials_list.append(rad_nuc)
 
-# Removing stable W nuclides from list so that they do not appear in the plot
+#Removing stable W nuclides from list so that they do not appear in the plot
 for j in stable_nuc :
-    nuc_last.remove(j)
-print(nuc_last)
+    rad_nuc.remove(j)
+
+print(rad_nuc)
+print(len(rad_nuc))    
 
 colors = list(mcolors.CSS4_COLORS.keys())
 num_dens= {}
 pair_list = {}
+g_list = {}
 
-with open(r'Densities_CSV.csv', 'a') as density_file:
+plt.figure(figsize=(9,10))
 
-    for nuclide in nuc_last:
+with open(r'Densities_CSV.csv', 'w') as density_file:
+
+    for nuclide in rad_nuc:
         plot_color = random.choice(colors)
         time, num_dens[nuclide] = results.get_atoms('1', nuclide, nuc_units = 'atom/cm3')
         print(time, num_dens[nuclide])
@@ -153,18 +160,18 @@ with open(r'Densities_CSV.csv', 'a') as density_file:
         density_file.write(','.join(map(str, num_dens[nuclide])) + '\n')
         plt.plot(time, num_dens[nuclide], marker='.', linestyle='solid', color=plot_color, label=nuclide)
 
+
 # Adding labels and title
-plt.xlabel('Time after beginning of operation [s]')
-plt.xlim(1, sum(time_steps)
+plt.xlabel('Time after start of operation [s]')
+plt.xlim(1, sum(time_steps))
+#plt.ylim(1e-09, 1e+20)
 #plt.gca().set_ylim(bottom=0)
 plt.ylabel('Nuclide density [atoms/cm^3]')
 plt.xscale("log")
 plt.yscale("log")
-plt.title('Plot of number density vs time')
-
+plt.title('Plot of number density vs time after operation')
 # Adding a legend
-plt.legend()
+plt.legend(loc='upper left', bbox_to_anchor=(1.0, 1.15), fontsize='8')
 
 plt.savefig('Nuclide_density_OpenMC')
-# Display the plot
-plt.show()
+plt.close()
