@@ -69,7 +69,6 @@ bounds = [0,
                  1.40e+7, 
                  2.00e+7]
 
-#Define source:
 def make_source(cells):
     source_list = []
     total_mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
@@ -79,7 +78,6 @@ def make_source(cells):
         source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
     return source_list, total_mesh
 
-# Define tallies
 def tallies(total_mesh, cells_w_mats):
     particle_filter = openmc.ParticleFilter('photon')
     total_filter = openmc.MeshFilter(total_mesh)
@@ -95,7 +93,6 @@ def tallies(total_mesh, cells_w_mats):
     energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-42")
 
     spectrum_tally = openmc.Tally(tally_id=2, name="Flux spectrum")
-    # Implementing energy and cell filters for flux spectrum tally
     spectrum_tally.filters = [cell_filter, total_filter, energy_filter_flux, particle_filter]
     spectrum_tally.scores = ['flux']
     
