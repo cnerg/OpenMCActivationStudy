@@ -72,41 +72,39 @@ bounds = [0,
 
 #Define source:
 def make_source(cells):
-    Source_List = []
-    Total_Mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
+    source_list = []
+    total_mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
     for index, bound in enumerate(bounds[:-1]):
-        Mesh_Dist = openmc.stats.MeshSpatial(Total_Mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
-        Energy_Dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
-        Source_List.append(openmc.IndependentSource(space=Mesh_Dist, energy=Energy_Dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
-    return Source_List, Total_Mesh
+        mesh_dist = openmc.stats.MeshSpatial(total_mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
+        energy_dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
+        source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
+    return source_list, total_mesh
 
 # Define tallies
-def tallies(W_Shell, C_Shell, Particle_Filter, Total_Mesh):
-    Particle_Filter = openmc.ParticleFilter('photon')
-    Total_Filter = openmc.MeshFilter(Total_Mesh)
+def tallies(total_mesh):
+    particle_filter = openmc.ParticleFilter('photon')
+    total_filter = openmc.MeshFilter(total_mesh)
     
     neutron_tally = openmc.Tally(tally_id=1, name="Neutron tally")
     neutron_tally.scores = ['flux', 'elastic', 'absorption']
     
-    # Implementing filter for neutron tally through W shell
-    cell_filter = openmc.CellFilter([W_Shell, C_Shell])
+    # Implementing filter for neutron tally through shells with material
+    cell_filter = openmc.CellFilter(cells_w_mats)
     neutron_tally.filters = [cell_filter, Total_Filter]
 
-    # Creating a tally to get the flux energy spectrum.
-    # An energy filter is created to assign to the flux tally.
+    # Vitamin-J energy filter created to assign to the flux tally.
     energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-42")
 
     spectrum_tally = openmc.Tally(tally_id=2, name="Flux spectrum")
     # Implementing energy and cell filters for flux spectrum tally
-    spectrum_tally.filters = [cell_filter, Total_Filter, energy_filter_flux, Particle_Filter]
+    spectrum_tally.filters = [cell_filter, total_filter, energy_filter_flux, particle_filter]
     spectrum_tally.scores = ['flux']
     
     tall = openmc.Tallies([neutron_tally, spectrum_tally])
     tall.export_to_xml()
-    return tall, neutron_tally, spectrum_tally, Particle_Filter, Total_Filter, cell_filter
+    return tall, neutron_tally, spectrum_tally, particle_filter, total_filter, cell_filter
 
-# Assign simulation settings
-def settings(Source_List):
+def settings(source_list):
     sets = openmc.Settings()
     sets.batches = 10
     sets.inactive = 1
