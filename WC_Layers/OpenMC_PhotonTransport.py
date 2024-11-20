@@ -16,7 +16,6 @@ from TwoLayers_Geometry import *
 Mesh_File = 'OpenMC_Mesh.h5m'
 mesh_index = 0
 esd = extract_source_data(Files)
-inner_radius = 995
 
 parser = argparse.ArgumentParser(description="Specify required inputs: file path to ALARA Element Library, element name, inner radius [cm], outer_radius [cm]")
 
@@ -81,7 +80,7 @@ def make_source(cells):
     return source_list, total_mesh
 
 # Define tallies
-def tallies(total_mesh):
+def tallies(total_mesh, cells_w_mats):
     particle_filter = openmc.ParticleFilter('photon')
     total_filter = openmc.MeshFilter(total_mesh)
     
@@ -100,40 +99,18 @@ def tallies(total_mesh):
     spectrum_tally.filters = [cell_filter, total_filter, energy_filter_flux, particle_filter]
     spectrum_tally.scores = ['flux']
     
-    tall = openmc.Tallies([neutron_tally, spectrum_tally])
-    tall.export_to_xml()
-    return tall, neutron_tally, spectrum_tally, particle_filter, total_filter, cell_filter
-
+    talls = openmc.Tallies([neutron_tally, spectrum_tally])
+    return talls
+  
 def settings(source_list):
     sets = openmc.Settings()
     sets.batches = 10
     sets.inactive = 1
     sets.particles = 100000
-    sets.source = Source_List
+    sets.source = source_list
     sets.run_mode = 'fixed source'
-    sets.export_to_xml()
     return sets
 
-def plot_universe(Void, W_Shell, C_Shell, Cells):
-    universe_ss = openmc.Universe(cells=Cells)
-    Plot = universe_ss.plot(width=(2500.0, 2500.0), basis='xz',
-              colors={Void: 'blue', W_Shell: 'red', C_Shell: 'green'}, legend=True)
-    Plot.figure.savefig('Universe')
-    return universe_ss
-
-# Exporting materials, geometry, and tallies to .xml
-def export_to_xml(filepath, element_1, element_2, inner_radius_W, outer_radius_W, inner_radius_C):
-    OpenMC_SF = mat_lib(filepath)
-    materials = []
-    for material_id, element in enumerate(elements):
-         materials.append(make_element(element, material_id+1, OpenMC_SF))
-    OpenMC_Mat = all_mat(OpenMC_W, OpenMC_C)
-    OpenMC_Geometry = make_spherical_shell(inner_radius_W, outer_radius_W, inner_radius_C, OpenMC_W, OpenMC_C)
-    OpenMC_Source = make_source(OpenMC_Geometry[2], OpenMC_Geometry[3], OpenMC_Geometry[4])
-    OpenMC_Settings = settings(OpenMC_Source[0])
-    OpenMC_Tallies = tallies(OpenMC_Geometry[2], OpenMC_Geometry[3], OpenMC_Source[1], OpenMC_Source[2])
-    OpenMC_Universe = plot_universe(OpenMC_Geometry[1], OpenMC_Geometry[2], OpenMC_Geometry[3], OpenMC_Geometry[4])
-    #return OpenMC_Materials, OpenMC_Geometry, OpenMC_Source, OpenMC_Settings, OpenMC_Tallies, OpenMC_Universe
-    return OpenMC_SF, OpenMC_W, OpenMC_C, *OpenMC_Geometry, *OpenMC_Source, OpenMC_Settings, *OpenMC_Tallies
-    
-Lib_Lines, M_1, M_2, geometry, Void, W_Shell, C_Shell, Cells, source_list, particle_filter, total_mesh, tall, neutron_tally, spectrum_tally, total_filter, cell_filter, sets = export_to_xml(fp, E_1, E_2, R_W_1, R_W_2, R_C_1)
+def create_openmc_model(geom_object, mats_object, sets_object, talls_object):
+    model = openmc.model.Model(geometry = geom_object, materials = mats_object, settings = sets_object, tallies = talls_object)
+    return model
