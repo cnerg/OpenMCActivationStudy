@@ -89,12 +89,13 @@ def make_source(cells, mesh_file):
         source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
     return source_list, total_mesh
 
-def tallies(total_mesh):
+def tallies(total_mesh, tallied_cells):
       '''
     Creates tallies and assigns energy, spatial, and particle filters.
     
     inputs: 
         total_mesh: OpenMC unstructured mesh object
+        tallied_cells: OpenMC Cell/iterable of OpenMC Cell objects/iterable of Cell ID #
         
     outputs:
         talls: OpenMC Tallies object
@@ -106,8 +107,7 @@ def tallies(total_mesh):
     neutron_tally.scores = ['flux', 'elastic', 'absorption']
     
     # Implementing filter for neutron tally through shells with material
-    # cells_w_mats has yet to be defined
-    cell_filter = openmc.CellFilter(cells_w_mats)
+    cell_filter = openmc.CellFilter(tallied_cells)
     neutron_tally.filters = [cell_filter, total_filter]
 
     # Vitamin-J energy filter created to assign to the flux tally.
