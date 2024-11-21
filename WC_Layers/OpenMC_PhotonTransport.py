@@ -13,7 +13,7 @@ from TwoLayers_Materials import *
 from TwoLayers_Geometry import *
 
 # These will be moved to a yaml file
-Mesh_File = 'OpenMC_Mesh.h5m'
+openmc_mesh_file = 'OpenMC_Mesh.h5m'
 mesh_index = 0
 esd = extract_source_data(Files)
 
@@ -69,16 +69,36 @@ bounds = [0,
                  1.40e+7, 
                  2.00e+7]
 
-def make_source(cells):
+def make_source(cells, mesh_file):
+      '''
+    Creates a list of OpenMC sources, complete with the relevant space and energy distributions
+    
+    inputs:
+        cells: list of OpenMC Cell objects
+        mesh_file: .h5/.h5m mesh onto which photon source will be distributed
+        
+    output:
+        source_list: list of OpenMC independent sources
+        total_mesh: OpenMC Unstructured Mesh object
+    '''
     source_list = []
-    total_mesh = openmc.UnstructuredMesh(Mesh_File, library='moab')
+    total_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
     for index, bound in enumerate(bounds[:-1]):
         mesh_dist = openmc.stats.MeshSpatial(total_mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
         energy_dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
         source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
     return source_list, total_mesh
 
-def tallies(total_mesh, cells_w_mats):
+def tallies(total_mesh):
+      '''
+    Creates tallies and assigns energy, spatial, and particle filters.
+    
+    inputs: 
+        total_mesh: OpenMC unstructured mesh object
+        
+    outputs:
+        talls: OpenMC Tallies object
+    '''
     particle_filter = openmc.ParticleFilter('photon')
     total_filter = openmc.MeshFilter(total_mesh)
     
@@ -86,6 +106,7 @@ def tallies(total_mesh, cells_w_mats):
     neutron_tally.scores = ['flux', 'elastic', 'absorption']
     
     # Implementing filter for neutron tally through shells with material
+    # cells_w_mats has yet to be defined
     cell_filter = openmc.CellFilter(cells_w_mats)
     neutron_tally.filters = [cell_filter, total_filter]
 
@@ -100,6 +121,14 @@ def tallies(total_mesh, cells_w_mats):
     return talls
   
 def settings(source_list):
+      '''
+    Creates an OpenMC Settings object
+    
+    inputs:
+        source_list: iterable of OpenMC SourceBase objects
+    outputs:
+        sets: OpenMC Settings object
+    '''
     sets = openmc.Settings()
     sets.batches = 10
     sets.inactive = 1
