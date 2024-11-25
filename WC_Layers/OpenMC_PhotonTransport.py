@@ -43,7 +43,7 @@ R_C_1 = args.C_inner_radius
 # R_W_1 = 1000
 # R_W_2 = 1005
 # R_C_1 = 995
-bounds = [0, 
+bounds = np.array([0, 
                  1.00e+4, 
                  2.00e+4, 
                  5.00e+4, 
@@ -67,7 +67,7 @@ bounds = [0,
                  1.00e+7, 
                  1.20e+7, 
                  1.40e+7, 
-                 2.00e+7]
+                 2.00e+7])
 
 def make_source(cells, mesh_file):
       '''
@@ -83,7 +83,7 @@ def make_source(cells, mesh_file):
     '''
     source_list = []
     total_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
-    for index, bound in enumerate(bounds[:-1]):
+    for index in range(len(bounds) - 1):
         mesh_dist = openmc.stats.MeshSpatial(total_mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
         energy_dist = openmc.stats.Uniform(a=bounds[index], b=bounds[index + 1])
         source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
