@@ -1,73 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Aug  7 10:07:33 2024
-
-@author: Anupama Rajendra
-"""
-
 import openmc
-import argparse
 import numpy as np
 from Source_Mesh_Reader import extract_source_data, Files
-from TwoLayers_Materials import *
-from TwoLayers_Geometry import *
 
-# These will be moved to a yaml file
-openmc_mesh_file = 'OpenMC_Mesh.h5m'
-mesh_index = 0
+# Photon source densities from ALARA output 
 esd = extract_source_data(Files)
-
-parser = argparse.ArgumentParser(description="Specify required inputs: file path to ALARA Element Library, element name, inner radius [cm], outer_radius [cm]")
-
-#Required user inputs:
-parser.add_argument('--filepath', type=str, required=True)    
-parser.add_argument('--element_1', type=str, required=True)
-parser.add_argument('--element_2', type=str, required=True)
-#Shell radii are left as user inputs, but the mesh is specific to W_inner_radius = 1000, W_outer_radius = 1005, C_inner_radius = 995
-parser.add_argument('--W_inner_radius', type=float, required=True)
-parser.add_argument('--W_outer_radius', type=float, required=True)
-parser.add_argument('--C_inner_radius', type=float, required=True)
-
-args = parser.parse_args()
-
-fp = args.filepath
-E_1 = args.element_1
-E_2 = args.element_2
-R_W_1 = args.W_inner_radius
-R_W_2 = args.W_outer_radius
-R_C_1 = args.C_inner_radius
-
-# fp = '../../ALARA/data/elelib.std'
-# E_1 = 'W'
-# E_2 = 'C'
-# R_W_1 = 1000
-# R_W_2 = 1005
-# R_C_1 = 995
-bounds = np.array([0, 
-                 1.00e+4, 
-                 2.00e+4, 
-                 5.00e+4, 
-                 1.00e+5, 
-                 2.00e+5, 
-                 3.00e+5, 
-                 4.00e+5, 
-                 6.00e+5, 
-                 8.00e+5, 
-                 1.00e+6, 
-                 1.22e+6, 
-                 1.44e+6, 
-                 1.66e+6, 
-                 2.00e+6, 
-                 2.50e+6, 
-                 3.00e+6, 
-                 4.00e+6, 
-                 5.00e+6, 
-                 6.50e+6, 
-                 8.00e+6, 
-                 1.00e+7, 
-                 1.20e+7, 
-                 1.40e+7, 
-                 2.00e+7])
 
 def make_source(cells, mesh_file):
       '''
@@ -120,7 +56,7 @@ def tallies(total_mesh, tallied_cells):
     talls = openmc.Tallies([neutron_tally, spectrum_tally])
     return talls
   
-def settings(source_list):
+def settings(source_list, total_batches, inactive_batches, num_particles, run_mode):
       '''
     Creates an OpenMC Settings object
     
@@ -130,11 +66,11 @@ def settings(source_list):
         sets: OpenMC Settings object
     '''
     sets = openmc.Settings()
-    sets.batches = 10
-    sets.inactive = 1
-    sets.particles = 100000
+    sets.batches = total_batches
+    sets.inactive = inactive_batches
+    sets.particles = num_particles
     sets.source = source_list
-    sets.run_mode = 'fixed source'
+    sets.run_mode = run_mode
     return sets
 
 def create_openmc_model(geom_object, mats_object, sets_object, talls_object):
