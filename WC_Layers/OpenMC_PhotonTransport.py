@@ -83,7 +83,7 @@ def make_source(cells, mesh_file):
     '''
     source_list = []
     total_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
-    for index, (lower_bound, upper_bound) in enumerate(zip(bounds[:-1],bounds[1:[)):
+    for index, (lower_bound, upper_bound) in enumerate(zip(bounds[:-1],bounds[1:])):
         mesh_dist = openmc.stats.MeshSpatial(total_mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
         energy_dist = openmc.stats.Uniform(a=lower_bound, b=upper_bound)
         source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
