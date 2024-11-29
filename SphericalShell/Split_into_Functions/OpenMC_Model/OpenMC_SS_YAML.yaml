@@ -1,0 +1,16 @@
+alara_fp : elelib.std
+element : W
+
+geom_info :
+    thickness : 5
+    inner_radius : 1000
+    outer_boundary_type : vacuum     
+        
+particle_energy : 14.0E+06
+    
+settings_info :
+    total_batches : 10
+    inactive_batches : 1
+    num_particles : 10000
+    run_mode : fixed source 
+        
