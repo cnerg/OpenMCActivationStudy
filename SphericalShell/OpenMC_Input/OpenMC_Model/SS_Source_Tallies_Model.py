@@ -1,8 +1,4 @@
 import openmc
-import yaml
-
-file = open("OpenMC_SS_YAML.yaml")
-data = yaml.safe_load(file)
     
 def make_source(energy):
     point_source = openmc.stats.Point(xyz=(0.0, 0.0, 0.0))
