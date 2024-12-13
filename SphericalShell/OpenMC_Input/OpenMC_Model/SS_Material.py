@@ -1,14 +1,14 @@
 import openmc
 
-def alara_element_densities(filepath):  
+def alara_element_densities(elelib_fp):  
     '''
     Create a dictionary of element names and their corresponding densities using the ALARA element library.
     
     inputs:
-        filepath: path to file containing ALARA element library
+        filepath: path to file containing ALARA element library (str)
         
     '''
-    with open(""+filepath+"") as ALARA_Lib:
+    with open(elelib_fp) as ALARA_Lib:
         libLines = ALARA_Lib.readlines()
     num_lines = len(libLines)
     density_dict = {}
@@ -20,7 +20,7 @@ def alara_element_densities(filepath):
         line_num += int(element_data[4]) + 1
     return density_dict
 
-def make_element(element, density_dict):
+def make_element(element, density_dict, inner_radius, thickness):
     '''
     inputs:
         element: elemental symbol of chosen element (str)
@@ -28,9 +28,12 @@ def make_element(element, density_dict):
         
     outputs:
         mats : OpenMC Materials object
+        volume : volume (float) of material in cm3
     '''
     mat = openmc.Material(material_id=1, name=element)
     mat.add_element(element, 1.00)
     mat.set_density('g/cm3', density_dict.get(element.lower()))
+    volume = 4.0/3.0 * np.pi * ((inner_radius+thickness)**3 - inner_radius**3)
+    mat.volume = volume
     mats = openmc.Materials([mat])
-    return mats
+    return mats, volume
