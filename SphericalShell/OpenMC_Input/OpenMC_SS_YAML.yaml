@@ -1,4 +1,4 @@
-alara_fp : elelib.std
+elelib_fp : elelib.std
 element : W
 
 geom_info :
