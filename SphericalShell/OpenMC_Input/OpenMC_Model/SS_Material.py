@@ -1,4 +1,5 @@
 import openmc
+import numpy as np
 
 def alara_element_densities(elelib_fp):  
     '''
