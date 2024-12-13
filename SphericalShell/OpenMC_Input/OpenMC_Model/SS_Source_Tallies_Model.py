@@ -5,7 +5,6 @@ def make_source(energy):
     energy_dist = openmc.stats.Discrete(energy, 1.0)
     return point_source, energy_dist
 
-# Assign simulation settings
 def settings(point_source, energy_dist, total_batches, inactive_batches, num_particles, run_mode):
     sets = openmc.Settings()
     sets.batches = total_batches
@@ -15,7 +14,6 @@ def settings(point_source, energy_dist, total_batches, inactive_batches, num_par
     sets.run_mode = run_mode
     return sets
 
-# Define tallies
 def tallies(tallied_cells):
     particle_filter = openmc.ParticleFilter('neutron')
     cell_filter = openmc.CellFilter(tallied_cells)
@@ -23,10 +21,10 @@ def tallies(tallied_cells):
     
     neutron_tally = openmc.Tally(name="Neutron tally")
     neutron_tally.scores = ['flux', 'elastic', 'absorption']
-    neutron_tally.filters = [cell_filter]
+    neutron_tally.filters = [cell_filter, particle_filter]
 
     spectrum_tally = openmc.Tally(name="Neutron flux spectrum")
-    spectrum_tally.filters = [energy_filter_flux, cell_filter]
+    spectrum_tally.filters = [energy_filter_flux, cell_filter, particle_filter]
     spectrum_tally.scores = ['flux']
     
     talls = openmc.Tallies([neutron_tally, spectrum_tally])
