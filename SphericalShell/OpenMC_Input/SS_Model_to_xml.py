@@ -1,45 +1,42 @@
 import openmc
 import yaml
+import argparse
 from OpenMC_SS_Material import alara_element_densities, make_element
 from OpenMC_SS_Geometry import make_spherical_shell
 from OpenMC_Source_Tallies_Model import make_source, settings, tallies, create_openmc_model
 
-with open("OpenMC_SS_YAML.yaml") as file:
-    inputs = yaml.safe_load(file)
-
-# for OpenMC_SS_Material :    
-elelib_fp = inputs['elelib_fp']
-element = inputs['element']
-
-# for OpenMC_SS_Geometry :
-thickness = inputs['geom_info']['thickness']
-inner_radius = inputs['geom_info']['inner_radius']
-
-# for OpenMC_Source_Tallies_Model :
-energy = inputs['particle_energy']
-total_batches = inputs['settings_info']['total_batches']
-inactive_batches = inputs['settings_info']['inactive_batches']
-num_particles = inputs['settings_info']['num_particles']
-run_mode = inputs['settings_info']['run_mode']
-
-def run_ss_scripts(elelib_fp, element, thickness, inner_radius, energy, total_batches, inactive_batches, num_particles, run_mode) :
-    #OpenMC_SS_Material :
-    aed = alara_element_densities(elelib_fp)
-    element = make_element(element, aed, inner_radius, thickness)
-    #OpenMC_SS_Geometry :
-    # The 1st argument is an OpenMC Material object, derived from a Materials object
-    mss = make_spherical_shell(element[0][0], thickness, inner_radius)
-    #OpenMC_Source_Tallies_Model :
-    ms = make_source(energy)
-    sets = settings(ms[0], ms[1], settings['total_batches'], 
-          settings['inactive_batches'], 
-          settings['num_particles'], 
-          settings['run_mode'])
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--yaml_filepath', required=True, help="Path to YAML file containing required inputs (str)")
+    args = parser.parse_args()
+    yaml_filepath = args.yaml_filepath
+    with open(yaml_filepath, 'r') as file:
+        inputs = yaml.safe_load(file)
+    geometry = inputs['geom_info']    
+    settings_info = inputs['settings_info']
+    # for OpenMC_SS_Material
+    aed = alara_element_densities(inputs['elelib_fp'])
+    element = make_element(inputs['element'], 
+                           aed, 
+                           geometry['inner_radius'], 
+                           geometry['thickness'])
+    # for OpenMC_SS_Geometry
+    mss = make_spherical_shell(element[0][0], 
+                               geometry['thickness'], 
+                               geometry['inner_radius'])
+    # for OpenMC_Source_Tallies_Model
+    ms = make_source(inputs['particle_energy'])
+    sets = make_settings(ms[0], ms[1], 
+                    settings_info['total_batches'], 
+                    settings_info['inactive_batches'], 
+                    settings_info['num_particles'], 
+                    settings_info['run_mode'])
     # tallied cells = all cells with non-void material
     tallied_cells = list(mss.get_all_material_cells().values())
-    talls = tallies(tallied_cells)
+    talls = make_tallies(tallied_cells)
     com = create_openmc_model(element[0], mss, talls, sets)
     com.export_to_model_xml()
     return com, element
-    
-rs = run_ss_scripts(elelib_fp, element, thickness, inner_radius, energy, total_batches, inactive_batches, num_particles, run_mode)
+
+if __name__ == "__main__":
+    main()
