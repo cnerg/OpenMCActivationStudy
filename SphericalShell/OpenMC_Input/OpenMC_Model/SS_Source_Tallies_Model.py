@@ -5,7 +5,7 @@ def make_source(energy):
     energy_dist = openmc.stats.Discrete(energy, 1.0)
     return point_source, energy_dist
 
-def settings(point_source, energy_dist, total_batches, inactive_batches, num_particles, run_mode):
+def make_settings(point_source, energy_dist, total_batches, inactive_batches, num_particles, run_mode):
     sets = openmc.Settings()
     sets.batches = total_batches
     sets.inactive = inactive_batches
@@ -14,7 +14,7 @@ def settings(point_source, energy_dist, total_batches, inactive_batches, num_par
     sets.run_mode = run_mode
     return sets
 
-def tallies(tallied_cells):
+def make_tallies(tallied_cells):
     particle_filter = openmc.ParticleFilter('neutron')
     cell_filter = openmc.CellFilter(tallied_cells)
     energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-175")
