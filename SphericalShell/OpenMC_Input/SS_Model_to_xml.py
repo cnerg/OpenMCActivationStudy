@@ -4,8 +4,8 @@ from OpenMC_SS_Material import alara_element_densities, make_element
 from OpenMC_SS_Geometry import make_spherical_shell
 from OpenMC_Source_Tallies_Model import make_source, settings, tallies, create_openmc_model
 
-file = open("OpenMC_SS_YAML.yaml")
-inputs = yaml.safe_load(file)
+with open("OpenMC_SS_YAML.yaml") as file:
+    inputs = yaml.safe_load(file)
 
 # for OpenMC_SS_Material :    
 elelib_fp = inputs['elelib_fp']
