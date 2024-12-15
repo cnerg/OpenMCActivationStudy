@@ -31,7 +31,10 @@ def run_ss_scripts(elelib_fp, element, thickness, inner_radius, energy, total_ba
     mss = make_spherical_shell(element[0][0], thickness, inner_radius)
     #OpenMC_Source_Tallies_Model :
     ms = make_source(energy)
-    sets = settings(ms[0], ms[1], total_batches, inactive_batches, num_particles, run_mode)
+    sets = settings(ms[0], ms[1], settings['total_batches'], 
+          settings['inactive_batches'], 
+          settings['num_particles'], 
+          settings['run_mode'])
     # tallied cells = all cells with non-void material
     tallied_cells = list(mss.get_all_material_cells().values())
     talls = tallies(tallied_cells)
