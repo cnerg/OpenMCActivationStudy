@@ -54,4 +54,4 @@ settings_info :
      particles : 100000
      batches : 10
      inactive_batches : 1
-     run_mode : fixed_source
+     run_mode : fixed source
