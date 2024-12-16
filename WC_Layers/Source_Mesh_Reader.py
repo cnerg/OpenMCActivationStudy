@@ -1,7 +1,9 @@
 import h5py
 import numpy as np
+import yaml
+import argparse
 
-def extract_source_data(source_mesh_list):
+def extract_source_data(source_mesh_list, num_elements, photon_groups):
     '''
     Identifies the location of the source density dataset within each mesh file.
     
@@ -28,7 +30,22 @@ def save_source_density(sd_list, sd_filename):
             for tet_element in source_density:
                 source.write(' '.join(map(str, tet_element)) + '\n')
                 
-def extract_save_sd(file_list, sd_filename):
-    data_extractor = extract_source_data(file_list)
-    save_source_density(data_extractor, sd_filename)
-    return data_extractor
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--Mesh_Reader_YAML', required = True, help="Path (str) to YAML file containing required inputs for Source_Mesh_Reader")
+    args = parser.parse_args()
+    smr_yaml = args.Mesh_Reader_YAML
+    
+    with open(smr_yaml, 'r') as yaml_file:
+        inputs = yaml.safe_load(yaml_file)
+        
+    source_mesh_list = inputs['source_meshes']
+    num_elements = inputs['num_elements']
+    photon_groups = inputs['photon_groups']
+    sd_filename = inputs['sd_filename']
+    
+    esd = extract_source_data(source_mesh_list, num_elements, photon_groups)
+    ssd = save_source_density(esd, sd_filename)
+
+if __name__ == "__main__":
+    main()
