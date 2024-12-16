@@ -32,7 +32,7 @@ def save_source_density(sd_list, sd_filename):
                 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--Mesh_Reader_YAML', required = True, help="Path (str) to YAML file containing required inputs for Source_Mesh_Reader")
+    parser.add_argument('--Mesh_Reader_YAML', default = 'Source_Mesh_Reader_Inputs.yaml', help="Path (str) to YAML file containing required inputs for Source_Mesh_Reader")
     args = parser.parse_args()
     smr_yaml = args.Mesh_Reader_YAML
     
