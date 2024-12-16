@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 11 13:49:23 2024
-
-@author: Anupama Rajendra
-"""
 import openmc
 
-#ALARA Element Library to read density for specified element:
-def alara_element_densities(filepath):  
-    with open(""+filepath+"") as ALARA_Lib:
+def alara_element_densities(alara_fp):
+    '''
+    Creates a dictionary where keys = element names (str) and values = element density (float)
+    inputs:
+        alara_filepath : path to ALARA element library
+    '''
+    with open(alara_fp) as ALARA_Lib:
         libLines = ALARA_Lib.readlines()
     num_lines = len(libLines)
     density_dict = {}
@@ -20,9 +18,13 @@ def alara_element_densities(filepath):
         line_num += int(element_data[4]) + 1
     return density_dict
     
-# Create materials & export to XML:
-#Simulating tungsten shell:
-def make_element(elements, density_dict):
+def make_materials(elements, density_dict):
+    '''
+    Creates an OpenMC Materials object using user-specified elements
+    inputs:
+        elements: iterable of element names (str)
+        density_dict: dictionary with keys = element names (str) and values = element density (float)
+    '''    
     mats = openmc.Materials([])
     for element_id, element in enumerate(elements):
         mat = openmc.Material(material_id=element_id+1, name=element)
