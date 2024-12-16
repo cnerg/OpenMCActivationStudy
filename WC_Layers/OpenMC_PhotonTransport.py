@@ -1,17 +1,19 @@
 import openmc
 import numpy as np
-from Source_Mesh_Reader import extract_source_data, Files
+import yaml
+import argparse
+from Source_Mesh_Reader import extract_source_data
+from TwoLayers_Materials import alara_element_densities, make_materials
 
-# Photon source densities from ALARA output 
-esd = extract_source_data(Files)
-
-def make_source(cells, mesh_file):
+def make_source(bounds, cells, mesh_file, source_mesh_index):
       '''
     Creates a list of OpenMC sources, complete with the relevant space and energy distributions
     
     inputs:
+        bounds : iterable of photon energy bounds (float)
         cells: list of OpenMC Cell objects
         mesh_file: .h5/.h5m mesh onto which photon source will be distributed
+        source_mesh_index: index specifying the photon source from which data is extracted
         
     output:
         source_list: list of OpenMC independent sources
@@ -20,12 +22,12 @@ def make_source(cells, mesh_file):
     source_list = []
     total_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
     for index, (lower_bound, upper_bound) in enumerate(zip(bounds[:-1],bounds[1:])):
-        mesh_dist = openmc.stats.MeshSpatial(total_mesh, strengths=esd[mesh_index][:,index], volume_normalized=False)
+        mesh_dist = openmc.stats.MeshSpatial(total_mesh, strengths=esd[source_mesh_index][:,index], volume_normalized=False)
         energy_dist = openmc.stats.Uniform(a=lower_bound, b=upper_bound)
-        source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[mesh_index][:, index]), particle='photon', domains=cells))
+        source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[source_mesh_index][:, index]), particle='photon', domains=cells))
     return source_list, total_mesh
 
-def tallies(total_mesh, tallied_cells):
+def make_tallies(total_mesh, tallied_cells):
       '''
     Creates tallies and assigns energy, spatial, and particle filters.
     
@@ -57,10 +59,10 @@ def tallies(total_mesh, tallied_cells):
     spectrum_tally.filters = [cell_filter, total_filter, energy_filter_flux, particle_filter, dose_filter]
     spectrum_tally.scores = ['flux']
     
-    talls = openmc.Tallies([neutron_tally, spectrum_tally])
+    talls = openmc.Tallies([photon_tally, spectrum_tally])
     return talls
   
-def settings(source_list, total_batches, inactive_batches, num_particles, run_mode):
+def make_settings(source_list, total_batches, inactive_batches, num_particles, run_mode):
       '''
     Creates an OpenMC Settings object
     
