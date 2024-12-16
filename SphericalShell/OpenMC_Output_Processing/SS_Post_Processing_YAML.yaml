@@ -1,0 +1,12 @@
+indices :
+    flux_tally_id : 2
+    energy_filter_index : 0
+    depletable_mat_index : 0
+
+filepaths :
+    statepoint_file_path : statepoint.10.h5  
+    dep_file_path : depletion_results.h5
+    
+units :
+    time_units : s
+    nuc_units : atom/cm3
