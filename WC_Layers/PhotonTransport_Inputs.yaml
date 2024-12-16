@@ -43,7 +43,7 @@ geom_info :
      thicknesses : #corresponds to each of the elements in element_list
          - 5
          - 5
-     outer_boundary : vacuum
+     outer_boundary_type : vacuum
 
 tally_info :
      tallied_elements : #change according to desired tally region/material
