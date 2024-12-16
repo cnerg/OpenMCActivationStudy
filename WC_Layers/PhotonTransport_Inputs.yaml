@@ -39,7 +39,7 @@ mat_info :
         - C
 
 geom_info :
-     inner_radius : 995,
+     inner_radius : 995
      thicknesses : #corresponds to each of the elements in element_list
          - 5
          - 5
