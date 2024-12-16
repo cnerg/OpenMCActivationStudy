@@ -39,18 +39,22 @@ def tallies(total_mesh, tallied_cells):
     particle_filter = openmc.ParticleFilter('photon')
     total_filter = openmc.MeshFilter(total_mesh)
     
-    neutron_tally = openmc.Tally(tally_id=1, name="Neutron tally")
-    neutron_tally.scores = ['flux', 'elastic', 'absorption']
+    photon_tally = openmc.Tally(tally_id=1, name="Photon tally")
+    photon_tally.scores = ['flux', 'elastic', 'absorption']
     
     # Implementing filter for neutron tally through shells with material
     cell_filter = openmc.CellFilter(tallied_cells)
-    neutron_tally.filters = [cell_filter, total_filter]
+    photon_tally.filters = [cell_filter, total_filter]
+
+    # Obtain coefficients to calculate effective dose
+    dose_energy, dose = openmc.data.dose_coefficients('photon', 'AP')
+    dose_filter = openmc.EnergyFunctionFilter(dose_energy, dose)
 
     # Vitamin-J energy filter created to assign to the flux tally.
     energy_filter_flux = openmc.EnergyFilter.from_group_structure("VITAMIN-J-42")
 
     spectrum_tally = openmc.Tally(tally_id=2, name="Flux spectrum")
-    spectrum_tally.filters = [cell_filter, total_filter, energy_filter_flux, particle_filter]
+    spectrum_tally.filters = [cell_filter, total_filter, energy_filter_flux, particle_filter, dose_filter]
     spectrum_tally.scores = ['flux']
     
     talls = openmc.Tallies([neutron_tally, spectrum_tally])
