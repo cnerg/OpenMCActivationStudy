@@ -1,20 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 11 15:56:57 2024
-
-@author: Anupama Rajendra
-"""
-
 import openmc
 
-# Create geometry
-#Spherical shell:
 def make_spherical_shells(materials, thicknesses, inner_radius):    
     '''
     Creates a set of concentric spherical shells, each with its own material & inner/outer radius.
-    
-    layers: list of tuples with OpenMC Material name and thickness: (material, thickness)
-    inner_radius: the radius of the innermost spherical shell
+    inputs:
+        materials : iterable of OpenMC Material objects
+        thicknesses: thickness of each OpenMC Material
+        inner_radius: the radius of the innermost spherical shell
     '''
     layers = zip(materials, thicknesses)
     inner_sphere = openmc.Sphere(r = inner_radius)
