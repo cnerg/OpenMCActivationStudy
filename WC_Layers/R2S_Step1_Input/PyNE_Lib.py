@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Sep  2 01:08:06 2024
-
-@author: Anupama Rajendra
-"""
-
 from pyne.material import Material
 from pyne.material_library import MaterialLibrary
 
