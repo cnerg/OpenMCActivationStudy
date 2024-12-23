@@ -36,7 +36,6 @@ def main():
     talls = make_tallies(tallied_cells)
     com = create_openmc_model(element[0], mss, talls, sets)
     com.export_to_model_xml()
-    return com, element
 
 if __name__ == "__main__":
     main()
