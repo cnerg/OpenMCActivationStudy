@@ -59,3 +59,4 @@ def plot_save_data(nuclide_array, materials_object, dep_results, time_steps, nuc
     plt.title('Plot of number density vs time')
     plt.legend()
     plt.savefig('Nuclide_density_OpenMC')
+    plt.close()
