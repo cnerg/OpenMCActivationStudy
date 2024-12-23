@@ -16,6 +16,7 @@ settings_info :
 
 depletion_params :
     chain_file : chain_endfb71_sfr.xml
+    model_file : model.xml
     times_post_boc : #sequence of timesteps following the beginning of operation (not cumulative)
         - 3.0E+8 
         - 86400 
