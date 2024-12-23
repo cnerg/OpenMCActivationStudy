@@ -5,7 +5,6 @@ import argparse
 from SS_Tally_PostProcessing import extract_tally_values, plot_flux_tally, save_data
 from SS_Depletion_PostProcessing import extract_nuclides, plot_save_data
 from OpenMC_SS_Material import alara_element_densities, make_element
-#from SS_Model_to_xml_gitedit import main
 
 def main() : 
     parser = argparse.ArgumentParser()
