@@ -37,6 +37,7 @@ def plot_flux_tally(tallies, flux_tally_id, energy_filter_index) :
     ax.set_ylabel('Flux [neutron-cm/source]')
     ax.grid(True, which='both')
     plt.savefig('Flux_spectrum_vs_energy.png')
+    plt.close()
     return flux_tally_values, energy_bins
 
 def save_data(flux_tally_values, mat_vol, tally_array) :
