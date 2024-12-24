@@ -21,7 +21,7 @@ def alara_element_densities(elelib_fp):
         line_num += int(element_data[4]) + 1
     return density_dict
 
-def make_materials(element, density_dict, inner_radius, thickness):
+def make_materials(element, density_dict):
     '''
     inputs:
         element: elemental symbol of chosen element (str)
@@ -29,12 +29,9 @@ def make_materials(element, density_dict, inner_radius, thickness):
         
     outputs:
         mats : OpenMC Materials object
-        volume : volume (float) of material in cm3
     '''
     mat = openmc.Material(material_id=1, name=element)
     mat.add_element(element, 1.00)
     mat.set_density('g/cm3', density_dict.get(element.lower()))
-    volume = 4.0/3.0 * np.pi * ((inner_radius+thickness)**3 - inner_radius**3)
-    mat.volume = volume
     mats = openmc.Materials([mat])
-    return mats, volume
+    return mats
