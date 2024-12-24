@@ -8,6 +8,8 @@ def deplete_ss(chain_file_path, model, inner_radius, thickness, times_post_boc, 
     material = model.materials[0]
     chain_file = chain_file_path
     material.depletable = True
+    volume = 4.0/3.0 * np.pi * ((inner_radius+thickness)**3 - inner_radius**3)
+    material.volume = volume
     timesteps = times_post_boc
     source_rates = particle_source_rates
     operator = openmc.deplete.CoupledOperator(model, chain_file, normalization_mode = norm_mode)
