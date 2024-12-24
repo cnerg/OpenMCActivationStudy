@@ -21,7 +21,7 @@ def alara_element_densities(elelib_fp):
         line_num += int(element_data[4]) + 1
     return density_dict
 
-def make_element(element, density_dict, inner_radius, thickness):
+def make_materials(element, density_dict, inner_radius, thickness):
     '''
     inputs:
         element: elemental symbol of chosen element (str)
