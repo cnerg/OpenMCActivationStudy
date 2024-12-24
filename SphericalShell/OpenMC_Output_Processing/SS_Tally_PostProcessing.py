@@ -18,7 +18,7 @@ def extract_tally_values(statepoint_file_path) :
         tally_array = np.array(tally_array)   
     return tallies, tally_array
     
-def plot_flux_tally(tallies, flux_tally_id, energy_filter_index) :
+def plot_flux_spectrum(tallies, flux_tally_id, energy_filter_index) :
     '''
     Plots flux tally as a function of energy
     
@@ -29,8 +29,7 @@ def plot_flux_tally(tallies, flux_tally_id, energy_filter_index) :
     '''
     flux_tally = tallies[flux_tally_id]
     flux_tally_values = flux_tally.get_values(value = 'mean').ravel()
-    energy_filter = flux_tally.filters[energy_filter_index]
-    energy_bins = energy_filter.bins[:, 0]
+    energy_bins = flux_tally.filters[energy_filter_index].bins[:, 0]
     fix, ax = plt.subplots()
     ax.loglog(energy_bins, flux_tally_values, drawstyle='steps-post')
     ax.set_xlabel('Energy [eV]')
