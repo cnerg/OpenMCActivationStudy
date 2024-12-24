@@ -28,8 +28,7 @@ def make_tallies(tallied_cells):
     spectrum_tally.filters = [energy_filter_flux, cell_filter, particle_filter]
     spectrum_tally.scores = ['flux']
     
-    talls = openmc.Tallies([neutron_tally, spectrum_tally])
-    return talls
+    return openmc.Tallies([neutron_tally, spectrum_tally])
 
 def create_openmc_model(mats_object, geom_object, tallies_object, settings_object):
     model = openmc.model.Model(geometry = geom_object, materials = mats_object, settings = settings_object, tallies = tallies_object)
