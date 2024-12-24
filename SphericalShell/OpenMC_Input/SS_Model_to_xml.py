@@ -1,7 +1,7 @@
 import openmc
 import yaml
 import argparse
-from OpenMC_SS_Material import alara_element_densities, make_element
+from OpenMC_SS_Material import alara_element_densities, make_materials
 from OpenMC_SS_Geometry import make_spherical_shell
 from OpenMC_Source_Tallies_Model import make_source, settings, tallies, create_openmc_model
 
@@ -16,12 +16,12 @@ def main():
     settings_info = inputs['settings_info']
     # for OpenMC_SS_Material
     aed = alara_element_densities(inputs['elelib_fp'])
-    element = make_element(inputs['element'], 
+    materials = make_materials(inputs['element'], 
                            aed, 
                            geometry['inner_radius'], 
                            geometry['thickness'])
     # for OpenMC_SS_Geometry
-    mss = make_spherical_shell(element[0][0], 
+    mss = make_spherical_shell(materials[0][0], 
                                geometry['thickness'], 
                                geometry['inner_radius'])
     # for OpenMC_Source_Tallies_Model
@@ -34,7 +34,7 @@ def main():
     # tallied cells = all cells with non-void material
     tallied_cells = list(mss.get_all_material_cells().values())
     talls = make_tallies(tallied_cells)
-    com = create_openmc_model(element[0], mss, talls, sets)
+    com = create_openmc_model(materials[0], mss, talls, sets)
     com.export_to_model_xml()
 
 if __name__ == "__main__":
