@@ -20,8 +20,7 @@ def extract_nuclides(dep_file_path, time_units, depletable_mat_index) :
     for step in range(len(time_steps)):
         # Obtain a materials object with depletion information at each timestep
         materials_object = dep_results.export_to_materials(step)[depletable_mat_index]
-        all_nuc = materials_object.get_nuclides()      
-        for nuclide in all_nuc :   
+        for nuclide in materials_object.get_nuclides()  :   
             # Remove stable nuclides at beginning of operation
             if step == 0:
                 half_life = openmc.data.half_life(nuclide)
