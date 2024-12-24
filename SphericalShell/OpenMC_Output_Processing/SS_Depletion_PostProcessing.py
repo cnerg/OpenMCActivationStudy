@@ -14,37 +14,32 @@ def extract_nuclides(dep_file_path, time_units, depletable_mat_index) :
     '''    
     dep_results = openmc.deplete.Results(filename=dep_file_path)
     time_steps = dep_results.get_times(time_units = time_units)
-    nuclide_array = np.ndarray([], dtype = object)
-    stable_init_nuc = np.ndarray([], dtype = object)
-    
+    nuclide_set = set()
+    stable_init_nuc = set()
     for step in range(len(time_steps)):
         # Obtain a materials object with depletion information at each timestep
         materials_object = dep_results.export_to_materials(step)[depletable_mat_index]
-        for nuclide in materials_object.get_nuclides()  :   
-            # Remove stable nuclides at beginning of operation
+        for nuclide in materials_object.get_nuclides() :
             if step == 0:
                 half_life = openmc.data.half_life(nuclide)
                 if half_life == None:
-                    stable_init_nuc = np.append(stable_init_nuc, nuclide)
-            if nuclide not in nuclide_array and nuclide not in stable_init_nuc:        
-                nuclide_array = np.append(nuclide_array, nuclide) 
-                       
-    # Remove None element from array initialization    
-    nuclide_array = [nuc for nuc in nuclide_array if nuc is not None]
-    return nuclide_array, materials_object, dep_results, time_steps
+                    stable_init_nuc.add(nuclide)
+            nuclide_set.add(nuclide)     
+    nuclide_set = nuclide_set - stable_init_nuc
+    return nuclide_set, materials_object, dep_results, time_steps
 
-def plot_save_data(nuclide_array, materials_object, dep_results, time_steps, nuc_units) :
+def plot_save_data(nuclide_set, materials_object, dep_results, time_steps, nuc_units) :
     '''
     Plot nuclide density vs time data, and save data to a text file
     
     inputs :
-        nuclide_array : iterable of nuclide names (str)
+        nuclide_set : iterable of nuclide names (str)
         nuc_units : units of nuclide concentration ('atoms', 'atom/b-cm', 'atom/cm3')
         (All other inputs from the output of extract_nuclides())    
     '''
     with open(r'number_density_vs_time.txt', 'w') as density_file:
         num_dens = {}
-        for nuclide in nuclide_array : 
+        for nuclide in nuclide_set : 
             times, num_dens[nuclide] = dep_results.get_atoms(materials_object, nuclide, nuc_units = nuc_units)
             plt.plot(times, num_dens[nuclide], marker='.', linestyle='solid', label=nuclide)
             density_file.write(f'{nuclide} : ' + '\n')
