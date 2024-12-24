@@ -3,14 +3,15 @@ import openmc
 def make_source(energy):
     point_source = openmc.stats.Point(xyz=(0.0, 0.0, 0.0))
     energy_dist = openmc.stats.Discrete(energy, 1.0)
-    return point_source, energy_dist
+    source = openmc.Source(space = point_source, energy = energy_dist, strength = 1.0, particle = 'neutron')
+    return source
 
-def make_settings(point_source, energy_dist, total_batches, inactive_batches, num_particles, run_mode):
+def make_settings(source, total_batches, inactive_batches, num_particles, run_mode):
     sets = openmc.Settings()
     sets.batches = total_batches
     sets.inactive = inactive_batches
     sets.particles = num_particles
-    sets.source = openmc.Source(space = point_source, energy = energy_dist, strength = 1.0, particle = 'neutron')
+    sets.source = source
     sets.run_mode = run_mode
     return sets
 
