@@ -25,7 +25,7 @@ def main():
                                geometry['thickness'], 
                                geometry['inner_radius'])
     # for OpenMC_Source_Tallies_Model
-    ms = make_source(inputs['particle_energy'])
+    source_dists = make_source(inputs['particle_energy'])
     sets = make_settings(ms[0], ms[1], 
                     settings_info['total_batches'], 
                     settings_info['inactive_batches'], 
