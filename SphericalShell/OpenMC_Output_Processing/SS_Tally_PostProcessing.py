@@ -11,23 +11,21 @@ def extract_tally_values(statepoint_file_path) :
     '''
     with openmc.StatePoint(statepoint_file_path) as sp:
         tallies = sp.tallies
-        tally_array = []
-        for tally_id, tally in tallies.items():
-            tally_values = tally.get_values(value="mean").ravel()
-            tally_array.append(np.array(tally_values))
-        tally_array = np.array(tally_array)   
+    tally_array = []
+    for tally_id, tally in tallies.items():
+        tally_values = tally.get_values(value="mean").ravel()
+        tally_array.append(np.array(tally_values))
+    tally_array = np.array(tally_array)   
     return tallies, tally_array
     
-def plot_flux_spectrum(tallies, flux_tally_id, energy_filter_index) :
+def plot_flux_spectrum(flux_tally, energy_filter_index) :
     '''
     Plots flux tally as a function of energy
     
     inputs :
-        tallies : dictionary where keys = OpenMC Tally IDs and values = OpenMC Tally objects
-        flux_tally_id : id of OpenMC Tally object that scores flux with energy filter
+        flux_tally : OpenMC Tally object that scores flux with energy filter
         energy_filter_index : index of EnergyFilter within the list of applied filters
     '''
-    flux_tally = tallies[flux_tally_id]
     flux_tally_values = flux_tally.get_values(value = 'mean').ravel()
     energy_bins = flux_tally.filters[energy_filter_index].bins[:, 0]
     fix, ax = plt.subplots()
