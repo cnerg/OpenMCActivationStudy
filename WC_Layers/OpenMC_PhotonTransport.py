@@ -6,7 +6,7 @@ from Source_Mesh_Reader import extract_source_data
 from TwoLayers_Materials import alara_element_densities, make_materials
 from TwoLayers_Geometry import make_spherical_shells
 
-def make_source(bounds, cells, mesh_file, source_mesh_index, esd):
+def make_source(bounds, cells, mesh_file, source_mesh_index, source_data):
     '''
     Creates a list of OpenMC sources, complete with the relevant space and energy distributions
     
@@ -18,30 +18,30 @@ def make_source(bounds, cells, mesh_file, source_mesh_index, esd):
         
     output:
         source_list: list of OpenMC independent sources
-        total_mesh: OpenMC Unstructured Mesh object
+        unstructured_mesh: OpenMC Unstructured Mesh object
     '''
 
     source_list = []
-    total_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
+    unstructured_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
     for index, (lower_bound, upper_bound) in enumerate(zip(bounds[:-1],bounds[1:])):
-        mesh_dist = openmc.stats.MeshSpatial(total_mesh, strengths=esd[source_mesh_index][:,index], volume_normalized=False)
+        mesh_dist = openmc.stats.MeshSpatial(unstructured_mesh, strengths=source_data[source_mesh_index][:,index], volume_normalized=False)
         energy_dist = openmc.stats.Uniform(a=lower_bound, b=upper_bound)
-        source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(esd[source_mesh_index][:, index]), particle='photon', domains=cells))
-    return source_list, total_mesh
+        source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(source_data[source_mesh_index][:, index]), particle='photon', domains=cells))
+    return source_list, unstructured_mesh
 
-def make_tallies(total_mesh, tallied_cells, coeff_geom):
+def make_tallies(unstructured_mesh, tallied_cells, coeff_geom):
     '''
     Creates tallies and assigns energy, spatial, and particle filters.
     
     inputs: 
-        total_mesh: OpenMC unstructured mesh object
+        unstructured_mesh: OpenMC unstructured mesh object
         tallied_cells: OpenMC Cell/iterable of OpenMC Cell objects/iterable of Cell ID #
         
     outputs:
         OpenMC Tallies object
     '''
     particle_filter = openmc.ParticleFilter('photon')
-    total_filter = openmc.MeshFilter(total_mesh)
+    total_filter = openmc.MeshFilter(unstructured_mesh)
     
     photon_tally = openmc.Tally(tally_id=1, name="Photon tally")
     photon_tally.scores = ['flux', 'elastic', 'absorption']
@@ -86,51 +86,59 @@ def export_to_xml(geom_object, mats_object, sets_object, talls_object):
     return model    
     
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--Photon_Transport_YAML', default = "PhotonTransport_Inputs.yaml", help="Path (str) to YAML containing inputs for OpenMC_PhotonTransport")
-    parser.add_argument('--Mesh_Reader_YAML', default = 'Source_Mesh_Reader_Inputs.yaml', help="Path (str) to YAML containing inputs for Source_Mesh_Reader")
-    args = parser.parse_args()
-    transport_yaml = args.Photon_Transport_YAML
-    smr_yaml = args.Mesh_Reader_YAML
+    def parse_args():
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--Photon_Transport_YAML', default = "PhotonTransport_Inputs.yaml", help="Path (str) to YAML containing inputs for OpenMC_PhotonTransport")
+        parser.add_argument('--Mesh_Reader_YAML', default = 'Source_Mesh_Reader_Inputs.yaml', help="Path (str) to YAML containing inputs for Source_Mesh_Reader")
+        args = parser.parse_args()
+        return args
+
+    def read_yamls(args):
+        with open(args.Photon_Transport_YAML, 'r') as transport_file:
+            transport_data = yaml.safe_load(transport_file)
+        with open(args.Mesh_Reader_YAML, 'r') as smr_file:
+            mesh_data = yaml.safe_load(smr_file)    
+        return transport_data, mesh_data
+
+    def model_xml(transport_data, mesh_data):
     
-    with open(transport_yaml, 'r') as transport_file:
-        transport_data = yaml.safe_load(transport_file)
-    with open(smr_yaml, 'r') as smr_file:
-        smr_data = yaml.safe_load(smr_file)    
+        # TwoLayers_Materials:   
+        filenames = transport_data['filename_dict']
+        alara_fp = filenames['alara_el_lib']    
+        density_dict = alara_element_densities(filenames['alara_el_lib'])
+        materials = make_materials(transport_data['mat_info']['element_list'], 
+                               density_dict)
+    
+        # TwoLayers_Geometry:
+        #materials = mm
+        geom_info = transport_data['geom_info']  
+        coeff_geom = transport_data['coeff_geom']
+        settings_info = transport_data['settings_info']
+        source_mesh_list = mesh_data['source_meshes']
+        num_elements = mesh_data['num_elements']
+        photon_groups = mesh_data['photon_groups']        
         
-    # TwoLayers_Materials:    
-    alara_fp = transport_data['filename_dict']['alara_el_lib']
-    elements = transport_data['mat_info']['element_list']
+        spherical_shell_geom = make_spherical_shells(materials, 
+                                                     geom_info['thicknesses'], 
+                                                     geom_info['inner_radius'], 
+                                                     geom_info['outer_boundary_type'])
+        cells = list(spherical_shell_geom.get_all_cells().values())
+        tallied_cells = list(spherical_shell_geom.get_all_material_cells().values())
+        
+        source_data = extract_source_data(source_mesh_list, num_elements, photon_groups)
+        source_list, unstructured_mesh = make_source(transport_data['source_info']['phtn_e_bounds'],
+                     cells, transport_data['filename_dict']['mesh_file_openmc'], 
+                     transport_data['file_indices']['source_mesh_index'], 
+                     source_data)
+        tallies = make_tallies(unstructured_mesh, tallied_cells, coeff_geom)
+        settings = make_settings(source_list, settings_info['batches'], settings_info['inactive_batches'], settings_info['particles'], settings_info['run_mode'])
     
-    aed = alara_element_densities(alara_fp)
-    mm = make_materials(elements, aed)
+        model_obj = export_to_xml(spherical_shell_geom, materials, settings, tallies)
+        model_obj.export_to_model_xml()
     
-    # TwoLayers_Geometry:
-    materials = mm
-    geom_info = transport_data['geom_info']  
-    mss = make_spherical_shells(materials, geom_info['thicknesses'], geom_info['inner_radius'], geom_info['outer_boundary_type'])
-    
-    mesh_file = transport_data['filename_dict']['mesh_file_openmc']
-    source_mesh_index = transport_data['file_indices']['source_mesh_index']
-    bounds = transport_data['source_info']['phtn_e_bounds']
-    cells = list(mss.get_all_cells().values())
-    tallied_cells = list(mss.get_all_material_cells().values())
-    coeff_geom = transport_data['coeff_geom']
-    
-    source_mesh_list = smr_data['source_meshes']
-    num_elements = smr_data['num_elements']
-    photon_groups = smr_data['photon_groups']
-    esd = extract_source_data(source_mesh_list, num_elements, photon_groups)
-   
-    ms = make_source(bounds,cells, mesh_file, source_mesh_index, esd)
-    mt = make_tallies(ms[1], tallied_cells, coeff_geom)
-    
-    s = transport_data['settings_info']
-    
-    ms = make_settings(ms[0], s['batches'], s['inactive_batches'], s['particles'], s['run_mode'])
-    
-    etx = export_to_xml(mss, mm, ms, mt)
-    etx.export_to_model_xml()
+    args = parse_args()
+    transport_data, mesh_data = read_yamls(args)
+    model_xml(transport_data, mesh_data)
     
 if __name__ == "__main__":
     main()
