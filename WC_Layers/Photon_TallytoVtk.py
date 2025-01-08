@@ -68,27 +68,37 @@ def write_to_vtk(flux_spectrum_mean, summed_axes_mesh_filter, vtk_filename, mesh
     mesh.write_data_to_vtk(filename=vtk_filename, datasets={"mean":mesh_data.flatten()})
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--Photon_Transport_YAML', default = "PhotonTransport_Inputs.yaml", help="Path (str) to YAML containing inputs for Photon_TallytoVtk")
-    args = parser.parse_args()
-    transport_yaml = args.Photon_Transport_YAML
-    with open(transport_yaml, 'r') as file:
-        inputs = yaml.safe_load(file)
-    sp_filename = inputs['filename_dict']['sp_filename']
-    flux_spectrum_tally_id = inputs['file_indices']['flux_spectrum_tally_id']
-    summed_axes_energy_filter = inputs['summed_axes_energy_filter']
-    energy_filter_index = inputs['file_indices']['energy_filter_index']
-    mesh_number = inputs['file_indices']['mesh_number']
-    rs = read_statepoint(sp_filename, flux_spectrum_tally_id, summed_axes_energy_filter, energy_filter_index, mesh_number)
-    figure_filename = inputs['filename_dict']['figure_filename']
-    pfd = plot_flux_data(rs[0], rs[1], figure_filename)
+    def parse_args():
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--Photon_Transport_YAML', default = "PhotonTransport_Inputs.yaml", help="Path (str) to YAML containing inputs for Photon_TallytoVtk")
+        args = parser.parse_args()
+        return args
+
+    def read_yaml(args):
+        with open(args.Photon_Transport_YAML, 'r') as file:
+            inputs = yaml.safe_load(file)
+        return inputs
     
-    summed_axes_dose_filter = inputs['summed_axes_dose_filter']
-    cd = calculate_dose(rs[2], summed_axes_dose_filter)
-    
-    summed_axes_mesh_filter = inputs['summed_axes_mesh_filter']
-    vtk_filename = inputs['filename_dict']['vtk_filename']
-    wtv = write_to_vtk(rs[2], summed_axes_mesh_filter, vtk_filename, rs[3])
+    def save_photon_tally_vtk(inputs):
+        e_filter_lower, total_flux, flux_spectrum_mean, mesh = read_statepoint(inputs['filename_dict']['sp_filename'], 
+                                                                               inputs['file_indices']['flux_spectrum_tally_id'],
+                                                                               inputs['summed_axes_energy_filter'], 
+                                                                               inputs['file_indices']['energy_filter_index'],
+                                                                               inputs['file_indices']['mesh_number'])
+        flux_data_plot = plot_flux_data(e_filter_lower, total_flux,
+                                        inputs['filename_dict']['figure_filename'])
+
+        dose_calculation = calculate_dose(flux_spectrum_mean,
+                            inputs['summed_axes_dose_filter'])
+        
+        vtk_file = save_to_vtk(flux_spectrum_mean, 
+                          inputs['summed_axes_mesh_filter'], 
+                          inputs['filename_dict']['vtk_filename'], 
+                          mesh)
+        
+    args = parse_args()
+    inputs = read_yaml(args)
+    save_photon_tally_vtk(inputs)
 
 if __name__ == "__main__":
     main()
