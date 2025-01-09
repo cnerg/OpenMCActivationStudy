@@ -13,6 +13,9 @@ def extract_source_data(source_mesh_list, num_elements, photon_groups):
     sd_list = np.ndarray((len(source_mesh_list), num_elements, photon_groups))
     for source_index, source_name in enumerate(source_mesh_list):
          file = h5py.File(source_name, 'r')
+         # directly accessing the data stored in the HDF5 as specified by the MOAB mesh library
+         # MOAB data is stored in the `tstt` group, and this data is in a `tag` with name `source_density`
+         # applied to each of the `Tet4` type of `elements`
          sd_list[source_index,:] = file['tstt']['elements']['Tet4']['tags']['source_density'][:]
     return sd_list  
 
