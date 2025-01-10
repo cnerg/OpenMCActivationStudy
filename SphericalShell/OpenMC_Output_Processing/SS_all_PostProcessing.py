@@ -46,7 +46,7 @@ def main() :
     args = parse_args()
     pp_inputs, model_inputs = read_yamls(args)
     tally_processor = post_process_tallies(pp_inputs, model_inputs)
-    depletion_processor = post_process_dep(pp_inputs)    
+    post_process_dep(pp_inputs)    
 
 if __name__ == "__main__":
     main()
