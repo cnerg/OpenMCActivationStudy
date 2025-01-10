@@ -6,7 +6,7 @@ def alara_element_densities(elelib_fp):
     Create a dictionary of element names and their corresponding densities using the ALARA element library.
     
     inputs:
-        filepath: path to file containing ALARA element library (str)
+        elelib_fp: path to file containing ALARA element library (str)
         
     '''
     with open(elelib_fp) as ALARA_Lib:
