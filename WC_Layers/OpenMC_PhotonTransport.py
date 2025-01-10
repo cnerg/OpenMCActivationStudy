@@ -29,25 +29,27 @@ def make_source(bounds, cells, mesh_file, source_mesh_index, source_data):
         source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(source_data[source_mesh_index][:, index]), particle='photon', domains=cells))
     return source_list, unstructured_mesh
 
-def make_tallies(unstructured_mesh, tallied_cells, coeff_geom):
+def make_tallies(unstructured_mesh, tallied_cells, coeff_geom, bounds):
     '''
     Creates tallies and assigns energy, spatial, and particle filters.
     
     inputs: 
         unstructured_mesh: OpenMC unstructured mesh object
         tallied_cells: OpenMC Cell/iterable of OpenMC Cell objects/iterable of Cell ID #
-        
+        coeff_geom : irradation geometry associated with dose coefficient calculation
+        bounds : energy bounds associated with photon source from ALARA
     outputs:
         OpenMC Tallies object
     '''
     particle_filter = openmc.ParticleFilter('photon')
-    total_filter = openmc.MeshFilter(unstructured_mesh)
+    mesh_filter = openmc.MeshFilter(unstructured_mesh)
     
     photon_tally = openmc.Tally(tally_id=1, name="Photon tally")
-    photon_tally.scores = ['flux', 'elastic', 'absorption']
+    photon_tally.scores = ['flux', 'absorption']
+    energy_filter_photon_tally = openmc.EnergyFilter(bounds)  
     
     cell_filter = openmc.CellFilter(tallied_cells)
-    photon_tally.filters = [cell_filter, total_filter, particle_filter]
+    photon_tally.filters = [energy_filter_photon_tally, particle_filter]
     
     # Obtain coefficients to calculate effective dose
     dose_energy, dose = openmc.data.dose_coefficients('photon', geometry=coeff_geom)
@@ -58,7 +60,7 @@ def make_tallies(unstructured_mesh, tallied_cells, coeff_geom):
 
     spectrum_tally = openmc.Tally(tally_id=2, name="Flux spectrum")
     # Implementing energy and cell filters for flux spectrum tally
-    spectrum_tally.filters = [cell_filter, total_filter, energy_filter_flux, particle_filter, dose_filter]
+    spectrum_tally.filters = [cell_filter, mesh_filter, energy_filter_flux, particle_filter, dose_filter]
     spectrum_tally.scores = ['flux']
     
     talls = openmc.Tallies([photon_tally, spectrum_tally])
@@ -110,17 +112,17 @@ def main():
                                density_dict)
     
         # TwoLayers_Geometry:
-        #materials = mm
         geom_info = transport_data['geom_info']  
         coeff_geom = transport_data['coeff_geom']
         settings_info = transport_data['settings_info']
         source_mesh_list = mesh_data['source_meshes']
         num_elements = mesh_data['num_elements']
-        photon_groups = mesh_data['photon_groups']        
+        photon_groups = mesh_data['photon_groups']  
+
+        layers = zip(materials, geom_info['thicknesses'])
         
-        spherical_shell_geom = make_spherical_shells(materials, 
-                                                     geom_info['thicknesses'], 
-                                                     geom_info['inner_radius'], 
+        spherical_shell_geom = make_spherical_shells(layers, 
+                                                     geom_info['inner_radius'],
                                                      geom_info['outer_boundary_type'])
         cells = list(spherical_shell_geom.get_all_cells().values())
         tallied_cells = list(spherical_shell_geom.get_all_material_cells().values())
@@ -130,7 +132,7 @@ def main():
                      cells, transport_data['filename_dict']['mesh_file_openmc'], 
                      transport_data['file_indices']['source_mesh_index'], 
                      source_data)
-        tallies = make_tallies(unstructured_mesh, tallied_cells, coeff_geom)
+        tallies = make_tallies(unstructured_mesh, tallied_cells, coeff_geom, transport_data['source_info']['phtn_e_bounds'])
         settings = make_settings(source_list, settings_info['batches'], settings_info['inactive_batches'], settings_info['particles'], settings_info['run_mode'])
     
         model_obj = export_to_xml(spherical_shell_geom, materials, settings, tallies)
