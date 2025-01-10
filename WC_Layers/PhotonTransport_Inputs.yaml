@@ -4,10 +4,12 @@ filename_dict :
     sp_filename : statepoint.10.h5
     figure_filename : Photon_flux_vs_energy.png
     vtk_filename : Photon_Flux.vtk
+    photon_tally_figname : photon_tally
 
 file_indices: 
     source_mesh_index : 0
     flux_spectrum_tally_id : 2
+    photon_tally_id : 1
     mesh_number : 1
     energy_filter_index : 2
     
