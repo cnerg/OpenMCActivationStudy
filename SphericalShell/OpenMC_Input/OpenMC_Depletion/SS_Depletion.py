@@ -5,8 +5,9 @@ import argparse
 import yaml
 
 def deplete_ss(chain_file_path, model, inner_radius, thickness, times_post_boc, particle_source_rates, norm_mode, timestep_units):
-    material = model.materials[0]
     chain_file = chain_file_path
+    
+    material = model.materials[0]
     material.depletable = True
     volume = 4.0/3.0 * np.pi * ((inner_radius+thickness)**3 - inner_radius**3)
     material.volume = volume
