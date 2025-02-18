@@ -2,8 +2,8 @@ import openmc
 import openmc.deplete
 import yaml
 import argparse
-from SS_Tally_PostProcessing import extract_tally_values, plot_flux_spectrum, save_data
-from SS_Depletion_PostProcessing import extract_nuclides, plot_save_data
+from SS_Tally_PostProcessing import extract_tally_values, plot_flux_spectrum, save_tally_data
+from SS_Depletion_PostProcessing import extract_nuclides, extract_data, plot_data, save_dep_data
 
 def parse_args():
    parser = argparse.ArgumentParser()
@@ -31,7 +31,7 @@ def post_process_tallies(pp_inputs, model_inputs):
     flux_tally_values, energy_bins = plot_flux_spectrum(flux_tally, 
                       pp_inputs['indices']['energy_filter_index']) 
         
-    tally_averages =  save_data(flux_tally_values, tally_array, 
+    tally_averages =  save_tally_data(flux_tally_values, tally_array, 
                                     model_inputs['geom_info']['inner_radius'], 
                                     model_inputs['geom_info']['thickness'])
 
@@ -39,8 +39,10 @@ def post_process_dep(pp_inputs):
     nuclide_set, materials_object, dep_results, time_steps = extract_nuclides(pp_inputs['filepaths']['dep_file_path'], 
                       pp_inputs['units']['time_units'], 
                       pp_inputs['indices']['depletable_mat_index'])  
-    data_plot = plot_save_data(nuclide_set, materials_object, dep_results, time_steps, 
+    times, num_dens = extract_data(nuclide_set, materials_object, dep_results, time_steps, 
                       pp_inputs['units']['nuc_units'])
+    dep_plot = plot_data(times, num_dens, nuclide_set)
+    dep_data = save_dep_data(times, num_dens, nuclide_set)
 
 def main() : 
     args = parse_args()
