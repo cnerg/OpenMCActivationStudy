@@ -39,9 +39,9 @@ def post_process_dep(pp_inputs):
     nuclide_set, materials_object, dep_results, time_steps = extract_nuclides(pp_inputs['filepaths']['dep_file_path'], 
                       pp_inputs['units']['time_units'], 
                       pp_inputs['indices']['depletable_mat_index'])  
-    times, num_dens = extract_data(nuclide_set, materials_object, dep_results, time_steps, 
+    times, num_dens = extract_dep_data(nuclide_set, materials_object, dep_results, time_steps, 
                       pp_inputs['units']['nuc_units'])
-    dep_plot = plot_data(times, num_dens, nuclide_set)
+    dep_plot = plot_dep_data(times, num_dens, nuclide_set)
     dep_data = save_dep_data(times, num_dens, nuclide_set)
 
 def main() : 
