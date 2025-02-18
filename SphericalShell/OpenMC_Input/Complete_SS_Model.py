@@ -121,16 +121,13 @@ def read_yaml(args):
 def create_model(inputs):
     geometry = inputs['geom_info']
     settings_info = inputs['settings_info']
-    # for OpenMC_SS_Material
     densities = alara_element_densities(inputs['elelib_fp'])
     materials = make_materials(inputs['element'], 
                         densities)
-    # for OpenMC_SS_Geometry
     element = materials[0]
     spherical_shell_geom = make_spherical_shell(element, 
                     geometry['thickness'], 
                     geometry['inner_radius'])
-    # for OpenMC_Source_Tallies_Model
     source_dists = make_source(inputs['particle_energy'])
     sets = make_settings(source_dists,
                     settings_info['total_batches'], 
