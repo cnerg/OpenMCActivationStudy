@@ -3,7 +3,7 @@ import openmc.deplete
 import yaml
 import argparse
 from SS_Tally_PostProcessing import extract_tally_values, plot_flux_spectrum, save_tally_data
-from SS_Depletion_PostProcessing import extract_nuclides, extract_data, plot_data, save_dep_data
+from SS_Depletion_PostProcessing import extract_nuclides, extract_dep_data, plot_dep_data, save_dep_data
 
 def parse_args():
    parser = argparse.ArgumentParser()
