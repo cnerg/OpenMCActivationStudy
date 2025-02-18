@@ -28,7 +28,7 @@ def extract_nuclides(dep_file_path, time_units, depletable_mat_index) :
     nuclide_set = nuclide_set - stable_init_nuc
     return nuclide_set, materials_object, dep_results, time_steps
 
-def extract_data(nuclide_set, materials_object, dep_results, time_steps, nuc_units):
+def extract_dep_data(nuclide_set, materials_object, dep_results, time_steps, nuc_units):
     '''
     Extract and store nuclide density data to be accessed in other functions.
     
@@ -42,7 +42,7 @@ def extract_data(nuclide_set, materials_object, dep_results, time_steps, nuc_uni
         times, num_dens[nuclide] = dep_results.get_atoms(materials_object, nuclide, nuc_units = nuc_units)
     return times, num_dens
 
-def plot_data(times, num_dens, nuclide_set):
+def plot_dep_data(times, num_dens, nuclide_set):
     '''
     Plots nuclide density vs. time.      
     '''
