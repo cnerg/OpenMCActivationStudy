@@ -37,7 +37,7 @@ def plot_flux_spectrum(flux_tally, energy_filter_index) :
     plt.close()
     return flux_tally_values, energy_bins
 
-def save_data(flux_tally_values, mat_vol, tally_array) :
+def save_tally_data(flux_tally_values, mat_vol, tally_array) :
     '''
     Saves average values of all tallies and neutron flux in a format appropriate for ALARA
     
