@@ -20,20 +20,19 @@ def read_yamls(args):
     return pp_inputs, model_inputs
     
 def post_process_tallies(pp_inputs, model_inputs):
-    filepaths = pp_inputs['filepaths']   
-    units = pp_inputs['units']        
+    filepaths = pp_inputs['filepaths']  
     indices = pp_inputs['indices']
     geom_info = model_inputs['geom_info']
         
     tallies, tally_array = extract_tally_values(pp_inputs['filepaths']['statepoint_file_path'])
         
-    flux_tally = tallies[pp_inputs['indices']['flux_tally_id']]
+    flux_tally = tallies[indices['flux_tally_id']]
     flux_tally_values, energy_bins = plot_flux_spectrum(flux_tally, 
-                      pp_inputs['indices']['energy_filter_index']) 
+                      indices['energy_filter_index']) 
         
     tally_averages =  save_tally_data(flux_tally_values, tally_array, 
-                                    model_inputs['geom_info']['inner_radius'], 
-                                    model_inputs['geom_info']['thickness'])
+                                    geom_info['inner_radius'], 
+                                    geom_info['thickness'])
 
 def post_process_dep(pp_inputs):
     nuclide_set, materials_object, dep_results, time_steps = extract_nuclides(pp_inputs['filepaths']['dep_file_path'], 
