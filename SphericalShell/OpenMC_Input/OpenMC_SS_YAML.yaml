@@ -1,0 +1,29 @@
+elelib_fp : elelib.std
+element : W
+
+geom_info :
+    thickness : 5
+    inner_radius : 1000
+    outer_boundary_type : vacuum     
+        
+particle_energy : 14.0E+06
+    
+settings_info :
+    total_batches : 10
+    inactive_batches : 1
+    num_particles : 10000
+    run_mode : fixed source
+
+depletion_params :
+    chain_file : chain_endfb71_sfr.xml
+    model_file : model.xml
+    times_post_boc : #sequence of timesteps following the beginning of operation (not cumulative)
+        - 3.0E+8 
+        - 86400 
+        - 2.6E+6 
+    source_rates : 
+        - 1.0E+18 
+        - 0
+        - 0
+    norm_mode : source_rate    
+    timestep_units : s
