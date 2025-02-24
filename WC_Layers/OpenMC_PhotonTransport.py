@@ -121,8 +121,8 @@ def main():
 
         layers = zip(materials, geom_info['thicknesses'])
         
-        spherical_shell_geom = make_spherical_shells(layers, 
-                                                     geom_info['inner_radius'],
+        spherical_shell_geom = make_spherical_shells(geom_info['inner_radius'], 
+                                                     layers,
                                                      geom_info['outer_boundary_type'])
         cells = list(spherical_shell_geom.get_all_cells().values())
         tallied_cells = list(spherical_shell_geom.get_all_material_cells().values())
