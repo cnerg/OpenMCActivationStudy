@@ -1,6 +1,6 @@
 import openmc
 
-def make_spherical_shells(inner radius, layers, outer_boundary_type):    
+def make_spherical_shells(inner_radius, layers, outer_boundary_type):    
     '''
     Creates a set of concentric spherical shells, each with its own material & inner/outer radius.
     inputs:
