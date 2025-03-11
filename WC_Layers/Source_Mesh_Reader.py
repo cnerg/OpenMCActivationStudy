@@ -3,14 +3,15 @@ import numpy as np
 import yaml
 import argparse
     
-def extract_source_data(source_mesh_list, num_elements, photon_groups):
+def extract_source_data(source_mesh_list, num_elements, num_photon_groups):
     '''
     Identifies the location of the source density dataset within each mesh file.
     
-    input: iterable of .h5m filenames (str), whose files contain photon source information
+    input: 
+        source_mesh_list: iterable of .h5m filenames (str), whose files contain photon source information
     output: numpy array of source density data with rows = # of mesh elements and columns = # number of photon groups, with one array per source mesh
     ''' 
-    sd_list = np.ndarray((len(source_mesh_list), num_elements, photon_groups))
+    sd_list = np.ndarray((len(source_mesh_list), num_elements, num_photon_groups))
     for source_index, source_name in enumerate(source_mesh_list):
          file = h5py.File(source_name, 'r')
          # directly accessing the data stored in the HDF5 as specified by the MOAB mesh library
@@ -21,7 +22,7 @@ def extract_source_data(source_mesh_list, num_elements, photon_groups):
 
 def save_source_density(sd_list, sd_filename):
     '''
-    Saves source density data as a separate text file for each source mesh. Each file is of size photon_groups * num_elements.
+    Saves source density data as a separate text file for each source mesh. Each file is of size num_photon_groups * num_elements.
     inputs:
         sd_list: list of source density datasets from h5m files
         sd_filename: user-provided filename that appears as a prefix for the text files (str)
@@ -42,14 +43,16 @@ def read_yaml(args):
         mesh_reader_inputs = yaml.safe_load(yaml_file)
     return mesh_reader_inputs
 
-def main():
-    def read_source_mesh(mesh_reader_inputs):
-        source_data = extract_source_data(mesh_reader_inputs['source_meshes'],
-                                      mesh_reader_inputs['num_elements'],
-                                      mesh_reader_inputs['photon_groups'])
-        save_source_density(source_data, 
+def read_source_mesh(mesh_reader_inputs):
+    #Find the size of the first source density dataset (assumed to be the same for all other datasets):
+    sd_data = h5py.File(mesh_reader_inputs['source_meshes'][0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
+    sd_list = extract_source_data(mesh_reader_inputs['source_meshes'],
+                                      sd_data.shape[0],
+                                      sd_data.shape[1])
+    source_density = save_source_density(sd_list, 
                               mesh_reader_inputs['sd_filename'])
 
+def main():
     args = parse_args()
     mesh_reader_inputs = read_yaml(args)
     read_source_mesh(mesh_reader_inputs)
