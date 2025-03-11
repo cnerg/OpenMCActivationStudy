@@ -31,18 +31,18 @@ def save_source_density(sd_list, sd_filename):
             for tet_element in source_density:
                 source.write(' '.join(map(str, tet_element)) + '\n')
 
-def main():
-    def parse_args():
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--Mesh_Reader_YAML', default = 'Source_Mesh_Reader_Inputs.yaml', help="Path (str) to YAML file containing required inputs for Source_Mesh_Reader")
-        args = parser.parse_args()
-        return args
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--Mesh_Reader_YAML', default = 'Source_Mesh_Reader_Inputs.yaml', help="Path (str) to YAML file containing required inputs for Source_Mesh_Reader")
+    args = parser.parse_args()
+    return args
     
-    def read_yaml(args): 
-        with open(args.Mesh_Reader_YAML, 'r') as yaml_file:
-            mesh_reader_inputs = yaml.safe_load(yaml_file)
-        return mesh_reader_inputs
+def read_yaml(args): 
+    with open(args.Mesh_Reader_YAML, 'r') as yaml_file:
+        mesh_reader_inputs = yaml.safe_load(yaml_file)
+    return mesh_reader_inputs
 
+def main():
     def read_source_mesh(mesh_reader_inputs):
         source_data = extract_source_data(mesh_reader_inputs['source_meshes'],
                                       mesh_reader_inputs['num_elements'],
