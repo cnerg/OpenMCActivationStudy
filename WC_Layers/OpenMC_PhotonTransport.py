@@ -2,6 +2,7 @@ import openmc
 import numpy as np
 import yaml
 import argparse
+import h5py
 from Source_Mesh_Reader import extract_source_data
 from TwoLayers_Materials import alara_element_densities, make_materials
 from TwoLayers_Geometry import make_spherical_shells
@@ -15,6 +16,7 @@ def make_source(bounds, cells, mesh_file, source_mesh_index, source_data):
         cells: list of OpenMC Cell objects
         mesh_file: .h5/.h5m mesh onto which photon source will be distributed
         source_mesh_index: index specifying the photon source from which data is extracted
+        sd_list: output of extract_source_data()        
         
     output:
         source_list: list of OpenMC independent sources
@@ -24,9 +26,9 @@ def make_source(bounds, cells, mesh_file, source_mesh_index, source_data):
     source_list = []
     unstructured_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
     for index, (lower_bound, upper_bound) in enumerate(zip(bounds[:-1],bounds[1:])):
-        mesh_dist = openmc.stats.MeshSpatial(unstructured_mesh, strengths=source_data[source_mesh_index][:,index], volume_normalized=False)
+        mesh_dist = openmc.stats.MeshSpatial(unstructured_mesh, strengths=sd_list[source_mesh_index][:,index], volume_normalized=False)
         energy_dist = openmc.stats.Uniform(a=lower_bound, b=upper_bound)
-        source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(source_data[source_mesh_index][:, index]), particle='photon', domains=cells))
+        source_list.append(openmc.IndependentSource(space=mesh_dist, energy=energy_dist, strength=np.sum(sd_list[source_mesh_index][:, index]), particle='photon', domains=cells))
     return source_list, unstructured_mesh
 
 def make_tallies(unstructured_mesh, tallied_cells, coeff_geom, bounds):
@@ -116,8 +118,6 @@ def main():
         coeff_geom = transport_data['coeff_geom']
         settings_info = transport_data['settings_info']
         source_mesh_list = mesh_data['source_meshes']
-        num_elements = mesh_data['num_elements']
-        photon_groups = mesh_data['photon_groups']  
 
         layers = zip(materials, geom_info['thicknesses'])
         
@@ -127,11 +127,13 @@ def main():
         cells = list(spherical_shell_geom.get_all_cells().values())
         tallied_cells = list(spherical_shell_geom.get_all_material_cells().values())
         
-        source_data = extract_source_data(source_mesh_list, num_elements, photon_groups)
+        #Find the size of the first source density dataset (assumed to be the same for all other datasets):
+        sd_data = h5py.File(mesh_data['source_meshes'][0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
+        sd_list = extract_source_data(source_mesh_list, sd_data.shape[0], sd_data.shape[1])
         source_list, unstructured_mesh = make_source(transport_data['source_info']['phtn_e_bounds'],
                      cells, transport_data['filename_dict']['mesh_file_openmc'], 
                      transport_data['file_indices']['source_mesh_index'], 
-                     source_data)
+                     sd_list)
         tallies = make_tallies(unstructured_mesh, tallied_cells, coeff_geom, transport_data['source_info']['phtn_e_bounds'])
         settings = make_settings(source_list, settings_info['batches'], settings_info['inactive_batches'], settings_info['particles'], settings_info['run_mode'])
     
