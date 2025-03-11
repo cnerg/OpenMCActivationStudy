@@ -1,5 +1,3 @@
-num_elements : 6168
-photon_groups : 24
 source_meshes :
     - source_mesh_1.h5m
     - source_mesh_2.h5m
