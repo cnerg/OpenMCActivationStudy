@@ -88,58 +88,57 @@ def make_settings(source_list, tot_batches, inactive_batches, num_particles, run
 def export_to_xml(geom_object, mats_object, sets_object, talls_object):
     model = openmc.model.Model(geometry = geom_object, materials = mats_object, settings = sets_object, tallies = talls_object)
     return model    
-    
-def main():
-    def parse_args():
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--Photon_Transport_YAML', default = "PhotonTransport_Inputs.yaml", help="Path (str) to YAML containing inputs for OpenMC_PhotonTransport")
-        parser.add_argument('--Mesh_Reader_YAML', default = 'Source_Mesh_Reader_Inputs.yaml', help="Path (str) to YAML containing inputs for Source_Mesh_Reader")
-        args = parser.parse_args()
-        return args
 
-    def read_yamls(args):
-        with open(args.Photon_Transport_YAML, 'r') as transport_file:
-            transport_data = yaml.safe_load(transport_file)
-        with open(args.Mesh_Reader_YAML, 'r') as smr_file:
-            mesh_data = yaml.safe_load(smr_file)    
-        return transport_data, mesh_data
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--Photon_Transport_YAML', default = "PhotonTransport_Inputs.yaml", help="Path (str) to YAML containing inputs for OpenMC_PhotonTransport")
+    parser.add_argument('--Mesh_Reader_YAML', default = 'Source_Mesh_Reader_Inputs.yaml', help="Path (str) to YAML containing inputs for Source_Mesh_Reader")
+    args = parser.parse_args()
+    return args
 
-    def model_xml(transport_data, mesh_data):
-    
-        # TwoLayers_Materials:   
-        filenames = transport_data['filename_dict']
-        alara_fp = filenames['alara_el_lib']    
-        density_dict = alara_element_densities(filenames['alara_el_lib'])
-        materials = make_materials(transport_data['mat_info']['element_list'], 
+def read_yamls(args):
+    with open(args.Photon_Transport_YAML, 'r') as transport_file:
+        transport_data = yaml.safe_load(transport_file)
+    with open(args.Mesh_Reader_YAML, 'r') as smr_file:
+        mesh_data = yaml.safe_load(smr_file)    
+    return transport_data, mesh_data
+
+def model_xml(transport_data, mesh_data):
+    # TwoLayers_Materials:   
+    filenames = transport_data['filename_dict']
+    alara_fp = filenames['alara_el_lib']    
+    density_dict = alara_element_densities(filenames['alara_el_lib'])
+    materials = make_materials(transport_data['mat_info']['element_list'], 
                                density_dict)
     
-        # TwoLayers_Geometry:
-        geom_info = transport_data['geom_info']  
-        coeff_geom = transport_data['coeff_geom']
-        settings_info = transport_data['settings_info']
-        source_mesh_list = mesh_data['source_meshes']
+    # TwoLayers_Geometry:
+    geom_info = transport_data['geom_info']  
+    coeff_geom = transport_data['coeff_geom']
+    settings_info = transport_data['settings_info']
+    source_mesh_list = mesh_data['source_meshes']
 
-        layers = zip(materials, geom_info['thicknesses'])
+    layers = zip(materials, geom_info['thicknesses'])
         
-        spherical_shell_geom = make_spherical_shells(geom_info['inner_radius'], 
-                                                     layers,
-                                                     geom_info['outer_boundary_type'])
-        cells = list(spherical_shell_geom.get_all_cells().values())
-        tallied_cells = list(spherical_shell_geom.get_all_material_cells().values())
+    spherical_shell_geom = make_spherical_shells(geom_info['inner_radius'], 
+                               layers,
+                               geom_info['outer_boundary_type'])
+    cells = list(spherical_shell_geom.get_all_cells().values())
+    tallied_cells = list(spherical_shell_geom.get_all_material_cells().values())
         
-        #Find the size of the first source density dataset (assumed to be the same for all other datasets):
-        sd_data = h5py.File(mesh_data['source_meshes'][0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
-        sd_list = extract_source_data(source_mesh_list, sd_data.shape[0], sd_data.shape[1])
-        source_list, unstructured_mesh = make_source(transport_data['source_info']['phtn_e_bounds'],
+    #Find the size of the first source density dataset (assumed to be the same for all other datasets):
+    sd_data = h5py.File(mesh_data['source_meshes'][0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
+    sd_list = extract_source_data(source_mesh_list, sd_data.shape[0], sd_data.shape[1])
+    source_list, unstructured_mesh = make_source(transport_data['source_info']['phtn_e_bounds'],
                      cells, transport_data['filename_dict']['mesh_file_openmc'], 
                      transport_data['file_indices']['source_mesh_index'], 
                      sd_list)
-        tallies = make_tallies(unstructured_mesh, tallied_cells, coeff_geom, transport_data['source_info']['phtn_e_bounds'])
-        settings = make_settings(source_list, settings_info['batches'], settings_info['inactive_batches'], settings_info['particles'], settings_info['run_mode'])
+    tallies = make_tallies(unstructured_mesh, tallied_cells, coeff_geom, transport_data['source_info']['phtn_e_bounds'])
+    settings = make_settings(source_list, settings_info['batches'], settings_info['inactive_batches'], settings_info['particles'], settings_info['run_mode'])
     
-        model_obj = export_to_xml(spherical_shell_geom, materials, settings, tallies)
-        model_obj.export_to_model_xml()
-    
+    model_obj = export_to_xml(spherical_shell_geom, materials, settings, tallies)
+    model_obj.export_to_model_xml()
+
+def main():   
     args = parse_args()
     transport_data, mesh_data = read_yamls(args)
     model_xml(transport_data, mesh_data)
