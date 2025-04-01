@@ -96,8 +96,6 @@ def extract_source_data(source_mesh_list, num_elements, num_photon_groups):
          file = h5py.File(source_name, 'r')
          sd_list[source_index,:] = file['tstt']['elements']['Tet4']['tags']['source_density'][:]
     return sd_list   
-
-# Photon transport model:
     
 def make_photon_sources(bounds, cells, mesh_file, source_mesh_index, sd_list):
     '''
