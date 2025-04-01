@@ -1,0 +1,77 @@
+filename_dict :
+    elelib_fp : elelib.std
+    mesh_file : Mesh.h5
+    sp_filename : statepoint.10.h5
+    figure_filename : Photon_flux_vs_energy
+    vtk_filename : Photon_Flux.vtk
+    photon_tally_figname : photon_tally
+
+mat_info :
+    element_list : #add in order of radially innermost to outermost
+        - W
+        - C
+
+geom_info :
+     inner_radius : 995
+     thicknesses : #corresponds to each of the elements in element_list
+         - 5
+         - 5
+     outer_boundary_type : vacuum
+        
+particle_energy : 14.0E+06
+ 
+settings_info :
+    total_batches : 10
+    inactive_batches : 1
+    num_particles : 10000
+    run_mode : fixed source 
+
+source_meshes :
+    - source_mesh_1.h5m
+    - source_mesh_2.h5m
+sd_filename : source_density    
+
+source_info :
+    phtn_e_bounds :
+        - 0
+        - 1.00e+4
+        - 2.00e+4
+        - 5.00e+4
+        - 1.00e+5 
+        - 2.00e+5 
+        - 3.00e+5 
+        - 4.00e+5 
+        - 6.00e+5 
+        - 8.00e+5 
+        - 1.00e+6 
+        - 1.22e+6 
+        - 1.44e+6 
+        - 1.66e+6 
+        - 2.00e+6 
+        - 2.50e+6 
+        - 3.00e+6 
+        - 4.00e+6 
+        - 5.00e+6 
+        - 6.50e+6 
+        - 8.00e+6 
+        - 1.00e+7 
+        - 1.20e+7 
+        - 1.40e+7 
+        - 2.00e+7
+
+file_indices: 
+    source_mesh_index : 0
+    flux_spectrum_tally_id : 2
+    photon_tally_id : 1
+    mesh_number : 1
+    energy_filter_index : 2
+
+tally_info :
+     tallied_elements : #change according to desired tally region/material
+         - W
+         - C
+
+axes_without_energy_bins : (0, 1, 3, 4, 5, 6)
+axes_without_mesh : (0,2,3,4,5,6) 
+axes_without_dose_filter_bin : (0,1,2,3,4,5)
+coeff_geom : 'AP' 
