@@ -211,13 +211,13 @@ def create_neutron_model(inputs, materials, geometry):
     settings_info = inputs['settings_info']
     
     source = make_source(inputs['particle_energy'])
-    talls = make_neutron_tallies(inputs['filename_dict']['mesh_file'])
-    sets = make_settings(source,
+    neutron_settings = make_settings(source,
                     settings_info['total_batches'], 
                     settings_info['inactive_batches'], 
                     settings_info['num_particles'], 
                     settings_info['run_mode'])
-    neutron_model = openmc.model.Model(geometry = geometry, materials = materials, settings = sets, tallies = talls)
+    neutron_tallies = make_neutron_tallies(inputs['filename_dict']['mesh_file'])
+    neutron_model = openmc.model.Model(geometry = geometry, materials = materials, settings = neutron_settings, tallies = neutron_tallies)
     return neutron_model
 
 #Convert the output of R2S Step2 to a format suitable for OpenMC photon transport:
@@ -233,23 +233,22 @@ def read_source_mesh(inputs):
 #Build photon transport model:
 
 def create_photon_model(inputs, materials, geometry, sd_list):
-        settings_info = inputs['settings_info']                                            
-        cells = list(geometry.get_all_cells().values())
-        tallied_cells = list(geometry.get_all_material_cells().values())
-        source_list, unstructured_mesh = make_photon_sources(inputs['source_info']['phtn_e_bounds'],
-                     cells, 
-                     inputs['filename_dict']['mesh_file'], 
-                     inputs['file_indices']['source_mesh_index'], 
-                     sd_list)
-        tallies = make_photon_tallies(unstructured_mesh, tallied_cells, inputs['coeff_geom'], inputs['source_info']['phtn_e_bounds'])
-        settings = make_settings(source_list, 
-                                 settings_info['total_batches'], 
-                                 settings_info['inactive_batches'], 
-                                 settings_info['num_particles'], 
-                                 settings_info['run_mode'])
- 
-        photon_model = openmc.model.Model(geometry = geometry, materials = materials, settings = settings, tallies = tallies) 
-        return photon_model                              
+    settings_info = inputs['settings_info']                                            
+    cells = list(geometry.get_all_cells().values())
+    tallied_cells = list(geometry.get_all_material_cells().values())
+    source_list, unstructured_mesh = make_photon_sources(inputs['source_info']['phtn_e_bounds'],
+                cells, 
+                inputs['filename_dict']['mesh_file'], 
+                inputs['file_indices']['source_mesh_index'], 
+                sd_list)
+    photon_settings = make_settings(source_list, 
+                settings_info['total_batches'], 
+                settings_info['inactive_batches'], 
+                settings_info['num_particles'], 
+                settings_info['run_mode'])
+    photon_tallies = make_photon_tallies(unstructured_mesh, tallied_cells, inputs['coeff_geom'], inputs['source_info']['phtn_e_bounds'])
+    photon_model = openmc.model.Model(geometry = geometry, materials = materials, settings = photon_settings, tallies = photon_tallies) 
+    return photon_model                             
 
 def main():
     args = parse_args()
