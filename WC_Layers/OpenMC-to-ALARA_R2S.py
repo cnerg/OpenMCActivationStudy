@@ -211,7 +211,8 @@ def create_geometry_obj(materials, inputs):
 def create_neutron_model(inputs, materials, geometry):
     settings_info = inputs['settings_info']
     
-    source = make_source(inputs['particle_energy'])
+    source = make_neutron_source(inputs['particle_energy'])
+
     neutron_settings = make_settings(source,
                     settings_info['total_batches'], 
                     settings_info['inactive_batches'], 
