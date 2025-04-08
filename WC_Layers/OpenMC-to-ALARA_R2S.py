@@ -61,7 +61,8 @@ def make_spherical_shells(inner_radius, layers, outer_boundary_type):
     geometry = openmc.Geometry(cells)    
     return geometry
 
-def make_source(energy):
+def make_neutron_source(energy):
+
     point_source = openmc.stats.Point(xyz=(0.0, 0.0, 0.0))
     energy_dist = openmc.stats.Discrete(energy, 1.0)
     source = openmc.Source(space = point_source, energy = energy_dist, strength = 1.0, particle = 'neutron')
