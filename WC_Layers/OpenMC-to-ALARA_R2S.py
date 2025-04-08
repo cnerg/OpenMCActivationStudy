@@ -226,7 +226,8 @@ def create_neutron_model(inputs, materials, geometry):
 def read_source_mesh(inputs):
     #Find the size of the first source density dataset (assumed to be the same for all other datasets):
     sd_data = h5py.File(inputs['source_meshes'][0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
-    sd_list = extract_source_data(inputs['source_meshes'],
+    sd_list = extract_photon_source_data(inputs['source_meshes'],
+
                                       sd_data.shape[0],
                                       sd_data.shape[1])
     return sd_list
