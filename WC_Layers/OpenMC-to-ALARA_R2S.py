@@ -83,7 +83,8 @@ def make_neutron_tallies(mesh_file):
     
     return openmc.Tallies([neutron_tally, spectrum_tally])
 
-def extract_source_data(source_mesh_list, num_elements, num_photon_groups):
+def extract_photon_source_data(source_mesh_list, num_elements, num_photon_groups):
+
     '''
     Identifies the location of the source density dataset within each mesh file.
     
