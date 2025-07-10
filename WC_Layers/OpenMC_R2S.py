@@ -199,20 +199,20 @@ def make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_
                 energy = mat.get_decay_photon_energy()
                 if energy == None:
                     photon_source = openmc.IndependentSource(
-                    energy = energy,
-                    particle = 'photon',
-                    strength = 0.0)
+                        energy = energy,
+                        particle = 'photon',
+                        strength = 0.0)
                 else:    
                     photon_source = openmc.IndependentSource(
-                    energy = energy,
-                    particle = 'photon',
-                    strength = energy.integral())
+                        energy = energy,
+                        particle = 'photon',
+                        strength = energy.integral())
                 
             else:
                 photon_source = openmc.IndependentSource(
-                energy = openmc.stats.Discrete(0, 1.0),
-                particle = 'photon',
-                strength = 0.0)
+                    energy = openmc.stats.Discrete(0, 1.0),
+                    particle = 'photon',
+                    strength = 0.0)
             
             photon_sources[mat_index] = photon_source
         photon_model = neutron_model
