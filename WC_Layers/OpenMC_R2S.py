@@ -100,7 +100,7 @@ def make_depletion_volumes(neutron_model, mesh_file):
         material.volume = total_volumes[material.id]
     return neutron_model 
 
-def deplete_wc(neutron_model, mesh_file, chain_file, timesteps, source_rates, norm_mode, timestep_units):
+def deplete_model(neutron_model, mesh_file, chain_file, timesteps, source_rates, norm_mode, timestep_units):
     materials = neutron_model.materials
     mesh_file = Path(mesh_file).resolve()   
     unstructured_mesh = openmc.UnstructuredMesh(mesh_file, library='moab') 
@@ -315,22 +315,11 @@ def create_alara_photon_model(inputs, neutron_model, sd_list):
         neutron_model
     )
     return photon_model
-    
-def run_depletion(inputs, neutron_model):
-    dep_params = inputs['dep_params']
-   
-    activation_mats, unstructured_mesh, integrator, neutron_model = deplete_wc(neutron_model,
-                inputs['filename_dict']['mesh_file'],
-                dep_params['chain_file'],
-                dep_params['timesteps'],
-                dep_params['source_rates'],
-                dep_params['norm_mode'],
-                dep_params['timestep_units'])
-    return activation_mats, unstructured_mesh, integrator, neutron_model
 
 def main():        
     args = parse_args()
     inputs = read_yaml(args)
+    dep_params = inputs['dep_params']
 
     openmc.config['chain_file'] = inputs['dep_params']['chain_file']
     if args.ext_mat_geom == True : #Import materials and geometry from external model
@@ -367,9 +356,15 @@ def main():
         else:
             if args.ext_mat_geom == True :
                 neutron_model = make_depletion_volumes(neutron_model, inputs['filename_dict']['mesh_file'])
-            activation_mats, unstructured_mesh, neutron_model = run_depletion(inputs, neutron_model)
+            activation_mats, unstructured_mesh, neutron_model = deplete_model(neutron_model,
+                inputs['filename_dict']['mesh_file'],
+                dep_params['chain_file'],
+                dep_params['timesteps'],
+                dep_params['source_rates'],
+                dep_params['norm_mode'],
+                dep_params['timestep_units'])
 
-        num_cooling_steps = (inputs['dep_params']['source_rates']).count(0)
+        num_cooling_steps = (dep_params['source_rates']).count(0)
         photon_model = make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_mesh, neutron_model, inputs)
     
     photon_tallies = make_photon_tallies(inputs['coeff_geom'], photon_model, num_cooling_steps)
