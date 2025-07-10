@@ -348,7 +348,9 @@ def main():
     if args.pyne_r2s == True:
         if args.neutron_transport == True:        
             neutron_model.tallies = make_neutron_tallies(inputs['filename_dict']['mesh_file'])
-            neutron_model.export_to_model_xml("neutron_model.xml")
+            neutron_model.export_to_model_xml('neutron_model.xml')
+            neutron_model_sp = neutron_model.run('neutron_model.xml')
+            neutron_model_sp.rename('neutron_model.statepoint.h5')
         else:
             sd_list = read_source_mesh(inputs)
             photon_model = create_alara_photon_model(inputs, neutron_model, sd_list)
