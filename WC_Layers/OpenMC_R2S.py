@@ -56,7 +56,6 @@ def make_spherical_shells(inner_radius, layers, outer_boundary_type):
         inner_radius = outer_radius
         inner_sphere = outer_sphere
     outer_sphere.boundary_type = outer_boundary_type    
-    cells.append(openmc.Cell(fill = None, region = +outer_sphere))
     geometry = openmc.Geometry(cells)    
     return geometry
 
