@@ -321,7 +321,7 @@ def create_alara_photon_model(inputs, neutron_model, sd_list):
                         photon_settings_info['num_particles'],
                         photon_settings_info['run_mode'])
         photon_model.settings = photon_settings
-        photon_model.export_to_model_xml('alara_photon_model_{source_mesh_index}.xml')
+        photon_model.settings.export_to_xml(f'settings_{source_mesh_index}.xml')
     return photon_model
     
 def main():        
