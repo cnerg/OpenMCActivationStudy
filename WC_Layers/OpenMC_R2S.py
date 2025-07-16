@@ -252,7 +252,7 @@ def make_photon_tallies(coeff_geom, photon_model, num_cooling_steps):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--OpenMC_WC_YAML', default = "R2S.yaml", help="Path (str) to YAML containing inputs for WC_Neutron_Transport")
+    parser.add_argument('--OpenMC_YAML', default = "R2S.yaml", help="Path (str) to YAML containing inputs")
     parser.add_argument('--ext_mat_geom', default = False, help="Specify whether materials and geometry come from external model")
     parser.add_argument("--neutron_transport", default=False, help="Create neutron transport model")
     parser.add_argument('--pyne_r2s', default = False, help="Specify whether PyNE R2S or OpenMC R2S steps are executed (OpenMC by default)")
@@ -260,8 +260,12 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def read_yaml(args):
-    with open(args.OpenMC_WC_YAML, 'r') as transport_file:
+def read_yaml(yaml_arg):
+    '''
+    input:
+        yaml_arg : output of parse_args() corresponding to args.OpenMC_YAML
+    '''
+    with open(yaml_arg, 'r') as transport_file:
         inputs = yaml.safe_load(transport_file)
     return inputs
     
@@ -306,7 +310,7 @@ def create_alara_photon_model(inputs, neutron_model, sd_list):
     
 def main():        
     args = parse_args()
-    inputs = read_yaml(args)
+    inputs = read_yaml(args.OpenMC_YAML)
     dep_params = inputs['dep_params']
 
     openmc.config['chain_file'] = inputs['dep_params']['chain_file']
