@@ -142,20 +142,21 @@ def deplete_model(neutron_model, mesh_file, chain_file, timesteps, source_rates,
         integrator.integrate(path=f"depletion_results_decay_set_{int_index}.h5")        
     return activation_mats, unstructured_mesh, neutron_model
 
-def extract_source_data(source_mesh_list, num_elements, num_photon_groups):
+def extract_source_data(inputs):
     '''
     Identifies the location of the source density dataset within each mesh file.
-    
-    input: 
-        source_mesh_list: iterable of .h5m filenames (str), whose files contain photon source information
     output: 
         numpy array of source density data with rows = # of mesh elements and columns = # number of photon groups, with one array per source mesh
-    ''' 
+    '''
+    source_mesh_list = inputs['source_meshes']
+    sd_data = h5py.File(source_mesh_list[0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
+    num_elements = sd_data.shape[0]
+    num_photon_groups = sd_data.shape[1]
     sd_list = np.ndarray((len(source_mesh_list), num_elements, num_photon_groups))
     for source_index, source_name in enumerate(source_mesh_list):
          file = h5py.File(source_name, 'r')
          sd_list[source_index,:] = file['tstt']['elements']['Tet4']['tags']['source_density'][:]
-    return sd_list   
+    return sd_list  
     
 def make_alara_photon_sources(bounds, cells, mesh_file, source_mesh_indices, sd_list):
     '''
@@ -279,13 +280,6 @@ def create_neutron_model(inputs, materials, geometry):
     return neutron_model
 
 #Convert the output of R2S Step2 to a format suitable for OpenMC photon transport:
-def read_source_mesh(inputs):
-    #Find the size of the first source density dataset (assumed to be the same for all other datasets):
-    sd_data = h5py.File(inputs['source_meshes'][0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
-    sd_list = extract_source_data(inputs['source_meshes'],
-                                      sd_data.shape[0],
-                                      sd_data.shape[1])
-    return sd_list
 
 def create_alara_photon_model(inputs, neutron_model, sd_list):
     '''
@@ -341,7 +335,7 @@ def main():
             neutron_model_sp = neutron_model.run('neutron_model.xml')
             neutron_model_sp.rename('neutron_model.statepoint.h5')
         else:
-            sd_list = read_source_mesh(inputs)
+            sd_list = extract_source_data(inputs)
             photon_model = create_alara_photon_model(inputs, neutron_model, sd_list)
             num_cooling_steps = len(inputs['file_indices']['source_mesh_indices'])
 
