@@ -253,10 +253,12 @@ def make_photon_tallies(coeff_geom, photon_model, num_cooling_steps):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--OpenMC_YAML', default = "R2S.yaml", help="Path (str) to YAML containing inputs")
-    parser.add_argument('--ext_mat_geom', default = False, help="Specify whether materials and geometry come from external model")
-    parser.add_argument("--neutron_transport", default=False, help="Create neutron transport model")
-    parser.add_argument('--pyne_r2s', default = False, help="Specify whether PyNE R2S or OpenMC R2S steps are executed (OpenMC by default)")
-    parser.add_argument('--photon_transport', default = False, help="Run only photon transport (no depletion)")
+    parser.add_argument('--ext_mat_geom', default = True, help="Specify whether materials and geometry come from external model")
+    parser.add_argument('--pyne_r2s', default = False, help="Choose to run pyne r2s steps")
+    parser.add_argument('--openmc_r2s', default = False, help="Choose to run openmc r2s steps")
+    if args.pyne_r2s and args.openmc_r2s:
+        parser.error("Cannot run PyNE and OpenMC workflows at the same time")
+    parser.add_argument("--pyne_neutron_transport", default=True, help="If True, run only neutron transport on PyNE model. If False, run only photon transport on PyNE model")
     args = parser.parse_args()
     return args
 
@@ -278,9 +280,6 @@ def create_neutron_model(inputs, materials, geometry):
                     neutron_settings_info['num_particles'],
                     neutron_settings_info['run_mode'])   
     neutron_model = openmc.model.Model(geometry = geometry, materials = materials, settings = neutron_settings)
-    neutron_model.export_to_model_xml('neutron_model.xml')
-    neutron_model_sp = neutron_model.run('neutron_model.xml')
-    neutron_model_sp.rename('neutron_model.statepoint.h5')
     return neutron_model
 
 #Convert the output of R2S Step2 to a format suitable for OpenMC photon transport:
@@ -308,64 +307,88 @@ def create_alara_photon_model(inputs, neutron_model, sd_list):
         photon_model.settings.export_to_xml(f'settings_{source_mesh_index}.xml')
     return photon_model
     
-def main():        
-    args = parse_args()
-    inputs = read_yaml(args.OpenMC_YAML)
-    dep_params = inputs['dep_params']
-
-    openmc.config['chain_file'] = inputs['dep_params']['chain_file']
-    if args.ext_mat_geom == True : #Import materials and geometry from external model
-        ext_model = openmc.model.Model.from_model_xml(inputs['filename_dict']['ext_model'])
-        materials = ext_model.materials
-        geometry = ext_model.geometry        
-    else:    
-        densities = alara_element_densities(inputs['filename_dict']['elelib_fp'])
-        materials = make_materials(inputs['mat_info']['element_list'],
-            densities)  
-        geom_info = inputs['geom_info']
-        layers = zip(materials, geom_info['thicknesses'])
-        geometry = make_spherical_shells(geom_info['inner_radius'],
-            layers,
-            geom_info['outer_boundary_type'])
-
+def import_ext_model(inputs):
+    '''
+    Import openmc materials and geometry objects from some external openmc model
+    '''
+    ext_model = openmc.model.Model.from_model_xml(inputs['filename_dict']['ext_model'])
+    materials = ext_model.materials
+    geometry = ext_model.geometry
+    
     #Settings also assigned here
     neutron_model = create_neutron_model(inputs, materials, geometry)
 
-    #Choose between PyNE R2S steps and OpenMC R2S steps
-    if args.pyne_r2s == True:
-        if args.neutron_transport == True:        
-            neutron_model.tallies = make_neutron_tallies(inputs['filename_dict']['mesh_file'])
-            neutron_model.export_to_model_xml('neutron_model.xml')
-            neutron_model_sp = neutron_model.run('neutron_model.xml')
-            neutron_model_sp.rename('neutron_model.statepoint.h5')
-        else:
-            sd_list = extract_source_data(inputs)
-            photon_model = create_alara_photon_model(inputs, neutron_model, sd_list)
-            num_cooling_steps = len(inputs['file_indices']['source_mesh_indices'])
+    return neutron_model
 
-    else:    
-        # Run OpenMC-only R2S 
-           
-        # Set to True to run photon transport only (no depletion):    
-        if args.photon_transport == True:
-            activation_mats = openmc.Materials.from_xml("Activation_Materials.xml")
-            mesh_file = Path(inputs['filename_dict']['mesh_file']).resolve()
-            unstructured_mesh = openmc.UnstructuredMesh(mesh_file, library='moab')
-        else:
-            if args.ext_mat_geom == True :
-                neutron_model = make_depletion_volumes(neutron_model, inputs['filename_dict']['mesh_file'])
-            activation_mats, unstructured_mesh, neutron_model = deplete_model(neutron_model,
-                inputs['filename_dict']['mesh_file'],
-                dep_params['chain_file'],
-                dep_params['timesteps'],
-                dep_params['source_rates'],
-                dep_params['norm_mode'],
-                dep_params['timestep_units'])
-
-        num_cooling_steps = (dep_params['source_rates']).count(0)
-        photon_model = make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_mesh, neutron_model, inputs)
+def make_native_model(inputs):
+    '''
+    Run make_materials() and make_spherical_shells()
+    '''
+    densities = alara_element_densities(inputs['filename_dict']['elelib_fp'])
+    materials = make_materials(inputs['mat_info']['element_list'],
+        densities)  
+    geom_info = inputs['geom_info']
+    layers = zip(materials, geom_info['thicknesses'])
+    geometry = make_spherical_shells(geom_info['inner_radius'],
+        layers,
+        geom_info['outer_boundary_type'])
     
+    #Settings also assigned here
+    neutron_model = create_neutron_model(inputs, materials, geometry)
+
+    return neutron_model
+
+def run_pyne_r2s(inputs, args):
+    if args.ext_geom == True: #Import materials and geometry from external model
+        materials, geometry = import_ext_model(inputs) 
+    if args.ext_geom == False: #Run make_materials() and make_spherical_shells() 
+        materials, geometry = make_native_model(inputs)
+        
+    #Settings also assigned here
+    neutron_model = create_neutron_model(inputs, materials, geometry)     
+
+    if args.pyne_neutron_transport == True:
+        neutron_model.tallies = make_neutron_tallies(inputs['filename_dict']['mesh_file'])
+        neutron_model.export_to_model_xml('neutron_model_pyne.xml')
+        neutron_model_sp = neutron_model.run('neutron_model_pyne.xml')
+        neutron_model_sp.rename('neutron_model_pyne.statepoint.h5')
+
+    if args.pyne_neutron_transport == False:
+        sd_list = extract_source_data(inputs)
+        photon_model = create_alara_photon_model(inputs, neutron_model, sd_list)
+        num_cooling_steps = len(inputs['file_indices']['source_mesh_indices'])
+        photon_tallies = make_photon_tallies(inputs['coeff_geom'], photon_model, num_cooling_steps)            
+
+def run_openmc_r2s(inputs, args): 
+    dep_params = inputs['dep_params'] 
+    if args.ext_geom == True: #Import materials and geometry from external model
+        neutron_model = import_ext_model(inputs) 
+        neutron_model = make_depletion_volumes(neutron_model, inputs['filename_dict']['mesh_file'])
+    if args.ext_geom == False: #Run make_materials() and make_spherical_shells() 
+        neutron_model = make_native_model(inputs)
+
+    activation_mats, unstructured_mesh, neutron_model = deplete_model(neutron_model,
+        inputs['filename_dict']['mesh_file'],
+        dep_params['chain_file'],
+        dep_params['timesteps'],
+        dep_params['source_rates'],
+        dep_params['norm_mode'],
+        dep_params['timestep_units'])   
+    
+    num_cooling_steps = (dep_params['source_rates']).count(0)
+    photon_model = make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_mesh, neutron_model, inputs)
     photon_tallies = make_photon_tallies(inputs['coeff_geom'], photon_model, num_cooling_steps)
+
+def main():        
+    args = parse_args()
+    inputs = read_yaml(args.OpenMC_YAML)
+
+    openmc.config['chain_file'] = inputs['dep_params']['chain_file']
+
+    if pyne_r2s == True:
+        run_pyne_r2s(inputs, args)
+    if openmc_r2s == True:
+        run_openmc_r2s(inputs, args)
    
 if __name__ == "__main__":
     main()
