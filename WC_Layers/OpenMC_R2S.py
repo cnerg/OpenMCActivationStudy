@@ -263,21 +263,7 @@ def read_yaml(args):
     with open(args.OpenMC_WC_YAML, 'r') as transport_file:
         inputs = yaml.safe_load(transport_file)
     return inputs
-
-def create_materials_obj(inputs):
-    densities = alara_element_densities(inputs['filename_dict']['elelib_fp'])
-    materials = make_materials(inputs['mat_info']['element_list'],
-                        densities)
-    return materials
-
-def create_geometry_obj(materials, inputs):
-    geom_info = inputs['geom_info']
-    layers = zip(materials, geom_info['thicknesses'])
-    geometry = make_spherical_shells(geom_info['inner_radius'],
-                    layers,
-                    geom_info['outer_boundary_type'])
-    return geometry
-
+    
 def create_neutron_model(inputs, materials, geometry):
     neutron_settings_info = inputs['neutron_settings_info']
     neutron_source = make_neutron_source(inputs['particle_energy'])
@@ -335,8 +321,14 @@ def main():
         materials = ext_model.materials
         geometry = ext_model.geometry        
     else:    
-        materials = create_materials_obj(inputs)
-        geometry = create_geometry_obj(materials, inputs)
+        densities = alara_element_densities(inputs['filename_dict']['elelib_fp'])
+        materials = make_materials(inputs['mat_info']['element_list'],
+            densities)  
+        geom_info = inputs['geom_info']
+        layers = zip(materials, geom_info['thicknesses'])
+        geometry = make_spherical_shells(geom_info['inner_radius'],
+            layers,
+            geom_info['outer_boundary_type'])
 
     #Settings also assigned here
     neutron_model = create_neutron_model(inputs, materials, geometry)
