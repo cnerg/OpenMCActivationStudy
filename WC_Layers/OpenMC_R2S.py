@@ -206,7 +206,7 @@ def make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_
                 
             else:
                 photon_source = openmc.IndependentSource(
-                    energy = openmc.stats.Discrete(0, 1.0),
+                    energy = None,
                     particle = 'photon',
                     strength = 0.0)
             
