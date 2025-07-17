@@ -253,13 +253,13 @@ def make_photon_tallies(coeff_geom, photon_model, num_cooling_steps):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--OpenMC_YAML', default = "R2S.yaml", help="Path (str) to YAML containing inputs")
-    parser.add_argument('--ext_mat_geom', default = True, help="Specify whether materials and geometry come from external model")
+    parser.add_argument('--ext_model', default = True, help="Specify whether materials and geometry come from external model")
     parser.add_argument('--pyne_r2s', default = False, help="Choose to run pyne r2s steps")
     parser.add_argument('--openmc_r2s', default = False, help="Choose to run openmc r2s steps")
-    if args.pyne_r2s and args.openmc_r2s:
-        parser.error("Cannot run PyNE and OpenMC workflows at the same time")
     parser.add_argument("--pyne_neutron_transport", default=True, help="If True, run only neutron transport on PyNE model. If False, run only photon transport on PyNE model")
     args = parser.parse_args()
+    if args.pyne_r2s and args.openmc_r2s:
+        parser.error("Cannot run PyNE and OpenMC workflows at the same time")
     return args
 
 def read_yaml(yaml_arg):
@@ -339,9 +339,9 @@ def make_native_model(inputs):
     return neutron_model
 
 def run_pyne_r2s(inputs, args):
-    if args.ext_geom == True: #Import materials and geometry from external model
+    if args.ext_model == True: #Import materials and geometry from external model
         neutron_model = import_ext_model(inputs) 
-    if args.ext_geom == False: #Run make_materials() and make_spherical_shells() 
+    if args.ext_model == False: #Run make_materials() and make_spherical_shells() 
         neutron_model = make_native_model(inputs)
 
     if args.pyne_neutron_transport == True:
@@ -358,10 +358,10 @@ def run_pyne_r2s(inputs, args):
 
 def run_openmc_r2s(inputs, args): 
     dep_params = inputs['dep_params'] 
-    if args.ext_geom == True: #Import materials and geometry from external model
+    if args.ext_model == True: #Import materials and geometry from external model
         neutron_model = import_ext_model(inputs) 
         neutron_model = make_depletion_volumes(neutron_model, inputs['filename_dict']['mesh_file'])
-    if args.ext_geom == False: #Run make_materials() and make_spherical_shells() 
+    if args.ext_model == False: #Run make_materials() and make_spherical_shells() 
         neutron_model = make_native_model(inputs)
 
     activation_mats, unstructured_mesh, neutron_model = deplete_model(neutron_model,
@@ -382,9 +382,9 @@ def main():
 
     openmc.config['chain_file'] = inputs['dep_params']['chain_file']
 
-    if pyne_r2s == True:
+    if args.pyne_r2s == True:
         run_pyne_r2s(inputs, args)
-    if openmc_r2s == True:
+    if args.openmc_r2s == True:
         run_openmc_r2s(inputs, args)
    
 if __name__ == "__main__":
