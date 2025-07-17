@@ -340,12 +340,9 @@ def make_native_model(inputs):
 
 def run_pyne_r2s(inputs, args):
     if args.ext_geom == True: #Import materials and geometry from external model
-        materials, geometry = import_ext_model(inputs) 
+        neutron_model = import_ext_model(inputs) 
     if args.ext_geom == False: #Run make_materials() and make_spherical_shells() 
-        materials, geometry = make_native_model(inputs)
-        
-    #Settings also assigned here
-    neutron_model = create_neutron_model(inputs, materials, geometry)     
+        neutron_model = make_native_model(inputs)
 
     if args.pyne_neutron_transport == True:
         neutron_model.tallies = make_neutron_tallies(inputs['filename_dict']['mesh_file'])
