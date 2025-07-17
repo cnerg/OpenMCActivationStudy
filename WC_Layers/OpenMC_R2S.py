@@ -87,12 +87,10 @@ def make_settings(source, total_batches, inactive_batches, num_particles, run_mo
     return sets
 
 #Only executed if external geometry and materials are imported
-#Is this even needed?
 def make_depletion_volumes(neutron_model, mesh_file):
     materials = neutron_model.materials
     mesh_file = Path(mesh_file).resolve()   
     unstructured_mesh = openmc.UnstructuredMesh(mesh_file, library='moab') 
-    #magic number
     mat_vols = unstructured_mesh.material_volumes(neutron_model, n_samples=25000000)
     #returns dict-like object that maps mat ids to array of volumes equal to # of mesh elements
 
@@ -113,7 +111,6 @@ def deplete_model(neutron_model, mesh_file, chain_file, timesteps, source_rates,
        material_nuclides = material.nuclides
        for material_nuclide in material_nuclides:
             model_nuclide_names.append(material_nuclide.name)
-    #magic number
     activation_mats = unstructured_mesh.get_homogenized_materials(neutron_model, n_samples=7000000)
     activation_mats_object = openmc.Materials(activation_mats)
     activation_mats_object.export_to_xml("Activation_Materials.xml")   
