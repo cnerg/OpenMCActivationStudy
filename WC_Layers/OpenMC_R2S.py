@@ -56,6 +56,7 @@ def make_spherical_shells(inner_radius, layers, outer_boundary_type):
         inner_radius = outer_radius
         inner_sphere = outer_sphere
     outer_sphere.boundary_type = outer_boundary_type    
+    #cells.append(openmc.Cell(fill = None, region = +outer_sphere))
     geometry = openmc.Geometry(cells)    
     return geometry
 
@@ -86,10 +87,12 @@ def make_settings(source, total_batches, inactive_batches, num_particles, run_mo
     return sets
 
 #Only executed if external geometry and materials are imported
+#Is this even needed?
 def make_depletion_volumes(neutron_model, mesh_file):
     materials = neutron_model.materials
     mesh_file = Path(mesh_file).resolve()   
     unstructured_mesh = openmc.UnstructuredMesh(mesh_file, library='moab') 
+    #magic number
     mat_vols = unstructured_mesh.material_volumes(neutron_model, n_samples=25000000)
     #returns dict-like object that maps mat ids to array of volumes equal to # of mesh elements
 
@@ -110,7 +113,7 @@ def deplete_model(neutron_model, mesh_file, chain_file, timesteps, source_rates,
        material_nuclides = material.nuclides
        for material_nuclide in material_nuclides:
             model_nuclide_names.append(material_nuclide.name)
-
+    #magic number
     activation_mats = unstructured_mesh.get_homogenized_materials(neutron_model, n_samples=7000000)
     activation_mats_object = openmc.Materials(activation_mats)
     activation_mats_object.export_to_xml("Activation_Materials.xml")   
@@ -156,7 +159,7 @@ def extract_source_data(inputs):
     for source_index, source_name in enumerate(source_mesh_list):
          file = h5py.File(source_name, 'r')
          sd_list[source_index,:] = file['tstt']['elements']['Tet4']['tags']['source_density'][:]
-    return sd_list  
+    return sd_list   
     
 def make_alara_photon_sources(bounds, cells, mesh_file, source_mesh_indices, sd_list):
     '''
@@ -184,6 +187,7 @@ def make_alara_photon_sources(bounds, cells, mesh_file, source_mesh_indices, sd_
 
 def make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_mesh, neutron_model, inputs):
     sd_data = h5py.File(inputs['source_meshes'][0], 'r')['tstt']['elements']['Tet4']['tags']['source_density'][:]
+    all_photon_sources = np.empty(num_cooling_steps, dtype=object)
     for int_index in range(num_cooling_steps):
         results = openmc.deplete.Results(f"depletion_results_decay_set_{int_index}.h5")
         photon_sources = np.empty(sd_data.shape[0], dtype=object)      
@@ -211,18 +215,14 @@ def make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_
                     strength = 0.0)
             
             photon_sources[mat_index] = photon_source
-        photon_model = neutron_model
-        photon_model.settings.source = openmc.MeshSource(unstructured_mesh, photon_sources)
-        photon_model.settings.export_to_xml(f'settings_{int_index}.xml')
-
-    return photon_model
+        all_photon_sources[int_index] = openmc.MeshSource(unstructured_mesh, photon_sources)
+    return all_photon_sources
     
 def make_photon_tallies(coeff_geom, photon_model, num_cooling_steps):
-    dose_energy, dose = openmc.data.dose_coefficients('photon', geometry=coeff_geom)
+    dose_energy, dose = openmc.data.dose_coefficients('photon', geometry=coeff_geom) #[pSv cm^2]
     dose_filter = openmc.EnergyFunctionFilter(dose_energy, dose)
 
-    #Could also use an unstructured mesh filter here - spherical mesh filter for visualization purposes
-    spherical_mesh = openmc.SphericalMesh(np.arange(0, 3800, 10), origin = (0.0, 0.0, 0.0), mesh_id=2, name="spherical_mesh")
+    spherical_mesh = openmc.SphericalMesh(np.arange(0, 1505, 5), origin = (0.0, 0.0, 0.0), mesh_id=2, name="spherical_mesh")
     spherical_mesh_filter = openmc.MeshFilter(spherical_mesh)
     
     particle_filter = openmc.ParticleFilter('photon')
@@ -232,17 +232,25 @@ def make_photon_tallies(coeff_geom, photon_model, num_cooling_steps):
     flux_tally.filters = [spherical_mesh_filter, energy_filter_flux, particle_filter]
     flux_tally.scores = ['flux']
 
-    dose_tally = openmc.Tally(tally_id=2, name="dose tally")
+    dose_tally = openmc.Tally(tally_id=2, name="dose tally") #[particle-cm/src]
     dose_tally.filters = [spherical_mesh_filter, energy_filter_flux, particle_filter, dose_filter]
     dose_tally.scores = ['flux']
 
     photon_model.tallies = [flux_tally, dose_tally]
-    #Change boundary condition:
-    list(photon_model.geometry.get_all_surfaces().keys())[-1].boundary_type="white"    
+    #Change boundary condition to obtain flux/dose beyond original geometry:
+    list(photon_model.geometry.get_all_surfaces().values())[-1].boundary_type="transmission"
+
+    tally_sphere = openmc.Sphere(r = 3900)
+    tally_sphere.boundary_type = "reflective"
+    tally_cell = openmc.Cell(fill = None, region = +list(photon_model.geometry.get_all_surfaces().values())[-1] & -tally_sphere)
+    photon_model.geometry.root_universe.add_cell(tally_cell)
 
     for int_index in range(num_cooling_steps):
         #Reassign settings (which contains source) for each decay step
         photon_model.settings = openmc.Settings.from_xml(f'settings_{int_index}.xml')
+        for source in photon_model.settings.source:
+            if "domain_ids" in source.constraints:
+                source.constraints['domain_ids'].append(source.constraints['domain_ids'][-1]+1)
         photon_model.export_to_model_xml(path=f'photon_model_{int_index}.xml')
         sp_path = photon_model.run(f'photon_model_{int_index}.xml')
         sp_path.rename(f'statepoint_openmc_{int_index}.h5')
@@ -253,8 +261,8 @@ def make_photon_tallies(coeff_geom, photon_model, num_cooling_steps):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--OpenMC_YAML', default = "R2S.yaml", help="Path (str) to YAML containing inputs")
-    parser.add_argument('--ext_model', default = True, help="Specify whether materials and geometry come from external model")
-    parser.add_argument('--pyne_r2s', default = False, help="Choose to run pyne r2s steps")
+    parser.add_argument('--ext_model', default = False, help="Specify whether materials and geometry come from external model")
+    parser.add_argument('--pyne_r2s', default = True, help="Choose to run pyne r2s steps")
     parser.add_argument('--openmc_r2s', default = False, help="Choose to run openmc r2s steps")
     parser.add_argument("--pyne_neutron_transport", default=True, help="If True, run only neutron transport on PyNE model. If False, run only photon transport on PyNE model")
     args = parser.parse_args()
@@ -270,7 +278,7 @@ def read_yaml(yaml_arg):
     with open(yaml_arg, 'r') as transport_file:
         inputs = yaml.safe_load(transport_file)
     return inputs
-    
+
 def create_neutron_model(inputs, materials, geometry):
     neutron_settings_info = inputs['neutron_settings_info']
     neutron_source = make_neutron_source(inputs['particle_energy'])
@@ -282,9 +290,7 @@ def create_neutron_model(inputs, materials, geometry):
     neutron_model = openmc.model.Model(geometry = geometry, materials = materials, settings = neutron_settings)
     return neutron_model
 
-#Convert the output of R2S Step2 to a format suitable for OpenMC photon transport:
-
-def create_alara_photon_model(inputs, neutron_model, sd_list):
+def create_alara_photon_model(inputs, photon_model, sd_list):
     '''
     photon_model: neutron_model to which this function adds photon-relevant settings
     '''
@@ -306,7 +312,19 @@ def create_alara_photon_model(inputs, neutron_model, sd_list):
         photon_model.settings = photon_settings
         photon_model.settings.export_to_xml(f'settings_{source_mesh_index}.xml')
     return photon_model
-    
+
+def create_openmc_photon_model(inputs, photon_model, all_photon_sources):
+    photon_settings_info = inputs['photon_settings_info']
+    for mesh_source_index, mesh_source in enumerate(all_photon_sources):
+        photon_settings = make_settings(mesh_source,
+                        photon_settings_info['total_batches'],
+                        photon_settings_info['inactive_batches'],
+                        photon_settings_info['num_particles'],
+                        photon_settings_info['run_mode'])      
+        photon_model.settings = photon_settings
+        photon_model.settings.export_to_xml(f'settings_{mesh_source_index}.xml')
+    return photon_model    
+
 def import_ext_model(inputs):
     '''
     Import openmc materials and geometry objects from some external openmc model
@@ -342,7 +360,7 @@ def run_pyne_r2s(inputs, args):
     if args.ext_model == True: #Import materials and geometry from external model
         neutron_model = import_ext_model(inputs) 
     if args.ext_model == False: #Run make_materials() and make_spherical_shells() 
-        neutron_model = make_native_model(inputs)
+        neutron_model = make_native_model(inputs)  
 
     if args.pyne_neutron_transport == True:
         neutron_model.tallies = make_neutron_tallies(inputs['filename_dict']['mesh_file'])
@@ -373,9 +391,10 @@ def run_openmc_r2s(inputs, args):
         dep_params['timestep_units'])   
     
     num_cooling_steps = (dep_params['source_rates']).count(0)
-    photon_model = make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_mesh, neutron_model, inputs)
+    all_photon_sources = make_openmc_photon_sources(num_cooling_steps, activation_mats, unstructured_mesh, neutron_model, inputs)
+    photon_model = create_openmc_photon_model(inputs, neutron_model, all_photon_sources)
     photon_tallies = make_photon_tallies(inputs['coeff_geom'], photon_model, num_cooling_steps)
-
+   
 def main():        
     args = parse_args()
     inputs = read_yaml(args.OpenMC_YAML)
@@ -386,6 +405,6 @@ def main():
         run_pyne_r2s(inputs, args)
     if args.openmc_r2s == True:
         run_openmc_r2s(inputs, args)
-   
+
 if __name__ == "__main__":
     main()
