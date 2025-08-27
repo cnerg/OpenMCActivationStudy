@@ -1,10 +1,11 @@
 filename_dict :
     elelib_fp : elelib.std
-    mesh_file : Mesh.h5
+    mesh_file : rbt_mesh_w_blocks_materials_no_graveyard.h5
     sp_filename : statepoint.10.h5
     figure_filename : Photon_flux_vs_energy
     vtk_filename : Photon_Flux.vtk
     photon_tally_figname : photon_tally
+    ext_model : HCPB_model_photons.xml
 
 mat_info :
     element_list : #add in order of radially innermost to outermost
@@ -27,8 +28,8 @@ settings_info :
     run_mode : fixed source 
 
 source_meshes :
-    - source_mesh_1.h5m
-    - source_mesh_2.h5m
+    - source_mesh_hcpb_1.h5m
+    - source_mesh_hcpb_2.h5m
 sd_filename : source_density    
 
 source_info :
@@ -60,7 +61,9 @@ source_info :
         - 2.00e+7
 
 file_indices: 
-    source_mesh_index : 0
+    source_mesh_indices:
+        - 0
+        - 1
     flux_spectrum_tally_id : 2
     photon_tally_id : 1
     mesh_number : 1
@@ -75,3 +78,19 @@ axes_without_energy_bins : (0, 1, 3, 4, 5, 6)
 axes_without_mesh : (0,2,3,4,5,6) 
 axes_without_dose_filter_bin : (0,1,2,3,4,5)
 coeff_geom : 'AP' 
+
+#Depletion parameters for OpenMC-only R2S
+dep_params :
+    num_samples : 1000000
+    chain_file : chain_endfb71_sfr.xml
+    timesteps : #sequence of timesteps following the beginning of operation (not cumulative)
+        - 3.0E+8 
+        - 86400 
+        - 2.6E+6 
+    source_rates : 
+        - 1.0E+18 
+        - 0
+        - 0
+    norm_mode : source-rate    
+    timestep_units : s
+
