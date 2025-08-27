@@ -81,6 +81,7 @@ coeff_geom : 'AP'
 
 #Depletion parameters for OpenMC-only R2S
 dep_params :
+    num_samples : 1000000
     chain_file : chain_endfb71_sfr.xml
     timesteps : #sequence of timesteps following the beginning of operation (not cumulative)
         - 3.0E+8 
@@ -92,3 +93,4 @@ dep_params :
         - 0
     norm_mode : source-rate    
     timestep_units : s
+
